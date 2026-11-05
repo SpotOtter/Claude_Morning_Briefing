@@ -26,10 +26,12 @@ server {
 }
 EOF
 
-# Weekdays: data at 4:30 AM, radar at 4:40 AM, local time as set above.
+# Every day: data at 4:30 AM, radar at 4:40 AM, then data again every hour from
+# 6 AM to 6 PM so closures and crashes stay current. Local time as set above.
 cat > /etc/crontabs/root <<'EOF'
-30 4 * * 1-5 /build.sh data
-40 4 * * 1-5 /build.sh radar
+30 4 * * * /build.sh data
+40 4 * * * /build.sh radar
+0 6-18 * * * /build.sh data
 EOF
 
 bashio::log.info "Timezone ${TZ}. Fetching first data in the background."
