@@ -10,7 +10,7 @@ Daily briefing page for dump-truck drivers in the Florida Panhandle (Mossy Head 
   - `web/index.html` is the page. It reads `data.json` and `radar.gif` beside it.
   - `build.sh`, `run.sh`, `Dockerfile`, `config.yaml` make up the add-on.
 
-The add-on refreshes `data.json` at 4:30 AM and `radar.gif` at 4:40 AM Central every day, refreshes `data.json` again every hour from 6 AM to 6 PM every day, and refreshes both once whenever it starts. The page reads `data.json` when it loads and does not reload itself, so reload the page to see newer data.
+The add-on refreshes `data.json` at 4:30 AM Central and then every hour from 6 AM to 6 PM, refreshes `radar.gif` every 15 minutes from 4 AM to 8:45 PM, all every day, and refreshes both once whenever it starts. The page reads `data.json` when it loads and does not reload itself, so reload the page to see newer data.
 
 ## Install on Home Assistant OS
 

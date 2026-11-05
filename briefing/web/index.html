@@ -545,11 +545,20 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   top.appendChild(wsec);
   var radarSec = el('section', { 'class': 'card radar', 'aria-label': 'Radar', hidden: '' });
   radarSec.appendChild(el('h2', null, [el('span', { text: 'Radar' })]));
-  var rimg = el('img', { src: 'radar.gif?v=' + encodeURIComponent(data.updated || ''), alt: 'Animated weather radar for the Florida Panhandle showing recent precipitation' });
+  var rimg = el('img', { alt: 'Animated weather radar for the Florida Panhandle showing recent precipitation' });
   rimg.onload = function () { radarSec.removeAttribute('hidden'); };
   radarSec.appendChild(rimg);
-  radarSec.appendChild(el('p', { 'class': 'cap', text: 'NWS Eglin AFB radar, recent frames as of the ' + (data.updated || 'morning') + ' update. Not live.' }));
+  var rcap = el('p', { 'class': 'cap', text: 'NWS Eglin AFB radar loop. Not live: reload the page for newer frames.' });
+  radarSec.appendChild(rcap);
   top.appendChild(radarSec);
+  // The radar file is refreshed on its own schedule, so show when it was fetched.
+  fetch('radar.gif', { method: 'HEAD', cache: 'no-store' }).then(function (res) {
+    var lm = res.headers.get('last-modified'), d = lm ? new Date(lm) : null;
+    if (!res.ok || !d || isNaN(d)) throw 0;
+    var t = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' }).format(d);
+    rcap.textContent = 'NWS Eglin AFB radar loop, fetched at ' + t + ' CT. Not live: reload the page for newer frames.';
+    rimg.src = 'radar.gif?v=' + d.getTime();
+  }).catch(function () { rimg.src = 'radar.gif?v=' + Math.floor(Date.now() / 300000); });
 
   // Roads
   var r = data.roads;
