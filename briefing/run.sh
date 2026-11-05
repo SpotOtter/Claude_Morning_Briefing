@@ -28,11 +28,9 @@ EOF
 
 # Every day, local time as set above: data at 4:30 AM and then on the hour, around
 # the clock, so the next-12-hours weather and the incident pins stay current.
-# Radar every 15 minutes from 4 AM to 8:45 PM.
 cat > /etc/crontabs/root <<'EOF'
 30 4 * * * /build.sh data
 0 * * * * /build.sh data
-*/15 4-20 * * * /build.sh radar
 EOF
 
 bashio::log.info "Timezone ${TZ}. Fetching first data in the background."

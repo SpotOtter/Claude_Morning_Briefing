@@ -1,5 +1,5 @@
 #!/bin/sh
-# Refresh the briefing data and radar. Usage: build.sh [data|radar|all]
+# Refresh the briefing data. Usage: build.sh [data|all]
 # Writes into /data/site; a failed fetch leaves the previous file in place.
 SITE=/data/site
 SCRIPTS=/opt/briefing/scripts
@@ -17,14 +17,4 @@ if [ "$what" = "data" ] || [ "$what" = "all" ]; then
     sleep 20
   done
   rm -f "$SITE/data.json.new"
-fi
-
-if [ "$what" = "radar" ] || [ "$what" = "all" ]; then
-  if python3 -I "$SCRIPTS/fetch_radar.py" "$SITE/radar.gif.new"; then
-    mv "$SITE/radar.gif.new" "$SITE/radar.gif"
-    echo "radar.gif updated"
-  else
-    echo "radar fetch failed"
-  fi
-  rm -f "$SITE/radar.gif.new"
 fi
