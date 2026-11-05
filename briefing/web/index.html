@@ -184,7 +184,6 @@ h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform:
 .m-land { fill: var(--bg); }
 .m-water { fill: var(--rain-soft); }
 .m-state { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 7 6; fill: none; }
-.m-ring { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 6; opacity: .8; }
 .m-i { stroke: var(--ink); stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .m-r { stroke: var(--muted); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .m-town { fill: var(--ink); }
@@ -364,13 +363,6 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     svg.appendChild(svgEl('text', { x: 12, y: s1[1] + 20, 'class': 'm-lab', text: 'FLORIDA' }));
 
     var home = P(-86.31, 30.77);
-    [25, 50].forEach(function (mi) {
-      svg.appendChild(svgEl('circle', { cx: home[0], cy: home[1], r: (mi / 69 * K).toFixed(1), 'class': 'm-ring' }));
-    });
-    var r25 = 25 / 69 * K;
-    svg.appendChild(svgEl('text', { x: home[0] + 6, y: home[1] + r25 + 14, 'class': 'm-note', text: '25 mi' }));
-    var r50 = 50 / 69 * K;
-    svg.appendChild(svgEl('text', { x: home[0] + 6, y: Math.min(530, home[1] + r50 + 14), 'class': 'm-note', text: '50 mi' }));
 
     var minor = {
       'US-98':  [[-87.4,30.42],[-87.22,30.42],[-87.16,30.37],[-86.86,30.40],[-86.62,30.42],[-86.5,30.40],[-86.36,30.38],[-86.2,30.37],[-86.0,30.30],[-85.85,30.20],[-85.8,30.18],[-85.66,30.16],[-85.4,30.07]],
@@ -572,8 +564,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   if (/^[A-Za-z0-9_-]{20,}$/.test(mapsKey)) loadGoogleMap(mapsKey, mapbox, r.items || []);
   rsec.appendChild(el('div', { 'class': 'maplegend' }, [
     el('span', null, [el('i', { 'class': 'lg-dot closure' }), document.createTextNode('Closure')]),
-    el('span', null, [el('i', { 'class': 'lg-dot crash' }), document.createTextNode('Major crash')]),
-    el('span', { text: 'Dashed rings: 25 and 50 miles from Mossy Head' })
+    el('span', null, [el('i', { 'class': 'lg-dot crash' }), document.createTextNode('Major crash')])
   ]));
   rsec.appendChild(el('p', { 'class': 'mapupdated', text: 'Closures and crashes last updated ' + (data.updated || 'at the morning update') + '.' }));
   if (r.items && r.items.length) {
