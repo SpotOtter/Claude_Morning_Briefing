@@ -699,7 +699,11 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
         // Free RainViewer radar tiles exist up to zoom 7; deeper zooms scale them up.
         return L.tileLayer(host + f.path + '/256/{z}/{x}/{y}/6/1_1.png', { opacity: 0, maxNativeZoom: 7, maxZoom: 9, zIndex: 5 }).addTo(map);
       });
+      // The card was hidden while the map was created, so Leaflet measured a zero-size box:
+      // re-measure now, and again whenever the box changes size.
       radarSec.removeAttribute('hidden');
+      map.invalidateSize(); map.setView(HOME, 7);
+      if (window.ResizeObserver) new ResizeObserver(function () { map.invalidateSize(); }).observe(mapEl);
       var span = Math.round((frames[frames.length - 1].time - frames[0].time) / 60);
       rcap.textContent = 'Radar from RainViewer on an Esri base map, last ' + span + ' minutes. Not live: reload the page for newer frames.';
       show(frames.length - 1);
