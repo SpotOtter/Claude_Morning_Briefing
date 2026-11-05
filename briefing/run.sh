@@ -21,7 +21,7 @@ server {
     root /data/site;
     index index.html;
     charset utf-8;
-    location / { try_files $uri =404; }
+    location / { try_files $uri $uri/ =404; }
     location ~* \.(json|gif|js)$ { add_header Cache-Control "no-cache"; }
 }
 EOF
