@@ -447,7 +447,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
         new g.TrafficLayer().setMap(map);
         var M = libs[1];
         new M.AdvancedMarkerElement({ map: map, position: HOME, title: 'Mossy Head',
-          content: new M.PinElement({ background: col('--mark', '#F2B705'), borderColor: col('--road', '#23272D'), glyphColor: col('--road', '#23272D') }).element });
+          content: new M.PinElement({ background: col('--mark', '#F2B705'), borderColor: col('--road', '#23272D'), glyphColor: col('--road', '#23272D') }) });
         var bounds = new g.LatLngBounds(HOME);
         items.forEach(function (c, i) {
           if (typeof c.lat !== 'number' || typeof c.lon !== 'number') return;
@@ -455,8 +455,8 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
           var pos = { lat: c.lat, lng: c.lon };
           bounds.extend(pos);
           new M.AdvancedMarkerElement({ map: map, position: pos, title: (crash ? 'Crash: ' : 'Closure: ') + (c.route || '') + ' ' + (c.where || ''),
-            content: new M.PinElement({ glyph: String(i + 1), glyphColor: '#fff',
-              background: crash ? col('--warn', '#C2410C') : col('--bad', '#B91C1C'), borderColor: '#fff' }).element });
+            content: new M.PinElement({ glyphText: String(i + 1), glyphColor: '#fff',
+              background: crash ? col('--warn', '#C2410C') : col('--bad', '#B91C1C'), borderColor: '#fff' }) });
         });
         if (items.length) map.fitBounds(bounds, 48);
         box.className = 'mapbox gmapbox';
