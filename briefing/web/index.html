@@ -172,6 +172,7 @@ h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform:
 .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .btn { font: 600 14px/1 var(--font-body); text-decoration: none; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
 .btn:hover { border-color: var(--muted); }
+.road .srclink { display: inline-block; margin-top: 10px; padding: 8px 12px; font-size: 13px; color: var(--muted); }
 
 /* Map */
 .mapbox { overflow-x: auto; margin: 0 -16px 10px; padding: 0 16px 4px; -webkit-overflow-scrolling: touch; }
@@ -583,8 +584,8 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
         ]),
         el('p', { text: c.detail + (c.detour ? ' Detour: ' + c.detour : '') })
       ]);
-      var src = link('Source', c.url, '');
-      if (src) { src.style.cssText = 'font-size:13px;color:var(--muted)'; info.appendChild(src); }
+      var src = link('Source', c.url, 'btn srclink');
+      if (src) info.appendChild(src);
       ul.appendChild(el('li', { 'class': 'road' }, [el('div', { 'class': 'shield', text: c.route }), info]));
     });
     rsec.appendChild(ul);
