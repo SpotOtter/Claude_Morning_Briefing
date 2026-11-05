@@ -178,6 +178,6 @@ nw = tryf(news, [])
 
 data = {"dayLabel": day.strftime("%A, %b %-d"), "place": "Mossy Head · Walton County, FL", "updated": now.strftime("%-I:%M %p CT"),
   "verdict": {"level": lvl, "label": lab, "title": title, "text": " ".join(tips)}, "weather": weather, "roads": roads, "news": nw,
-  "sources": "Weather: National Weather Service, Tallahassee. Roads: FL511 (Florida only). Headlines: Google News. The map is a schematic and not to scale."}
+  "sources": "Weather: National Weather Service, Tallahassee. Roads: FL511 (Florida only). Headlines: Google News."}
 json.dump(data, open(sys.argv[1], "w"), indent=1)
 print("ok", len(hours), len(items), len(nw), file=sys.stderr)

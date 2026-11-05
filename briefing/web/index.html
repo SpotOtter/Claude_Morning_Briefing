@@ -1,5 +1,16 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mossy Head Briefing</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<script>
+/* Mobile vs desktop version. Phones get the mobile layout by default; the footer link
+   on a phone switches to the full desktop layout and back (remembered in localStorage). */
+(function () {
+  var v = null; try { v = localStorage.getItem('briefing-view'); } catch (e) {}
+  if (v === 'desktop') document.getElementById('viewport').setAttribute('content', 'width=1000');
+})();
+</script>
 <script>
 /* Theme: follow the phone's setting until the user picks one with the toggle.
    Runs before first paint so there is no flash. The choice is kept in localStorage. */
@@ -109,7 +120,7 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 0 40px;
 }
-.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.wrap { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 a { color: inherit; }
 a:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
 
@@ -142,7 +153,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-
 h2 { font: 700 22px/1 var(--font-display); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--muted); }
 
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
 
 /* Verdict */
 .verdict { display: grid; grid-template-columns: auto 1fr; gap: 0; padding: 0; overflow: hidden; }
@@ -259,6 +270,8 @@ h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform:
 .news .src { font: 600 12px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; display: block; }
 
 footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.viewrow { margin-top: 10px; }
+.viewlink { min-height: 44px; padding: 0 2px; background: none; border: 0; color: inherit; font: 600 14px/1 var(--font-body); text-decoration: underline; cursor: pointer; }
 @media (max-width: 460px) {
   .verdict { grid-template-columns: 1fr; }
   .verdict .badge { justify-content: flex-start; padding: 10px 16px; font-size: 22px; }
@@ -351,7 +364,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     {"title":"Florida diesel averages $5.97 a gallon, down from $6.12 a week ago","text":"Crestview to Fort Walton Beach is $5.77. Pensacola is $5.70 and Panama City is $5.75.","source":"AAA · Nov 3","url":"https://gasprices.aaa.com/?state=FL"},
     {"title":"Pensacola is getting a pro women's softball team","text":"The team will play at Blue Wahoos Stadium.","source":"WEAR · Nov 4","url":"https://weartv.com/news/local/pensacola-gets-professional-womens-softball-team-will-play-at-blue-wahoos-stadium"}
   ],
-  "sources": "Weather: National Weather Service, Tallahassee. Roads: FL511 and local news. The hourly numbers and the two incidents on the map are examples until the daily task starts filling them in. The map is a schematic and not to scale."
+  "sources": "Weather: National Weather Service, Tallahassee. Roads: FL511 and local news. The hourly numbers and the two incidents on the map are examples until the daily task starts filling them in."
 }
 </script>
 
@@ -755,7 +768,18 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   nsec.appendChild(nl);
   top.appendChild(nsec);
 
-  top.appendChild(el('footer', { text: data.sources }));
+  var foot = el('footer', { text: data.sources });
+  // On phones, offer a switch between the mobile and the full desktop layout.
+  if (Math.min(screen.width, screen.height) <= 900) {
+    var desk = false; try { desk = localStorage.getItem('briefing-view') === 'desktop'; } catch (e) {}
+    var vb = el('button', { type: 'button', 'class': 'viewlink', text: desk ? 'Switch to mobile version' : 'Switch to desktop version' });
+    vb.addEventListener('click', function () {
+      try { if (desk) localStorage.removeItem('briefing-view'); else localStorage.setItem('briefing-view', 'desktop'); } catch (e) {}
+      location.reload();
+    });
+    foot.appendChild(el('div', { 'class': 'viewrow' }, [vb]));
+  }
+  top.appendChild(foot);
   }
 })();
 </script>
