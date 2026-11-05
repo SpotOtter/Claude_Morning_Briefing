@@ -656,56 +656,68 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   var rcap = el('p', { 'class': 'cap', text: 'NWS Eglin AFB radar loop. Not live: reload the page for newer frames.' });
   radarSec.appendChild(rcap);
   top.appendChild(radarSec);
-  // Radar on a Google map (follows the light/dark toggle): NEXRAD tiles from Iowa State
-  // Mesonet, 11 frames five minutes apart. If the map or the tiles fail, the NWS image stays.
+  // Radar on a Google map (follows the light/dark toggle): Eglin AFB (KEVX) base reflectivity
+  // tiles from Iowa State Mesonet, the latest scans about five minutes apart. The faint
+  // blue-gray "clear air" returns are dropped so only precipitation shows. If the map or the
+  // tiles fail, the NWS image stays.
   window.__briefingRadarInit = function (MapCls) {
-    var g = google.maps, HOME = { lat: 30.77, lng: -86.31 }, STEPS = 11;
-    var tileUrl = function (k, z, x, y) {
-      return 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913' +
-        (k ? '-m' + (k < 2 ? '0' : '') + (k * 5) + 'm' : '') + '/' + z + '/' + x + '/' + y + '.png';
-    };
-    var n = Math.pow(2, 7), la = HOME.lat * Math.PI / 180;
-    var tx = Math.floor((HOME.lng + 180) / 360 * n);
-    var ty = Math.floor((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2 * n);
-    var probe = new Image();
-    probe.onerror = function () { /* tiles unreachable: keep the NWS image */ };
-    probe.onload = function () { start(); };
-    probe.src = tileUrl(0, 7, tx, ty);
-    var holder, label, playBtn, map, layers, timer = null, cur = STEPS - 1, playing = true;
+    var g = google.maps, HOME = { lat: 30.77, lng: -86.31 }, MAXF = 10;
+    var BASE = 'https://mesonet.agron.iastate.edu/';
+    var frames = [], map, layers = [], label, playBtn, timer = null, cur = 0, playing = true, ready = false;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function Layer(ts) {
+      this.tileSize = new g.Size(256, 256); this.name = 'Radar'; this.minZoom = 5; this.maxZoom = 10;
+      this.ts = ts; this.op = 0; this.tiles = [];
+    }
+    Layer.prototype.getTile = function (c, z, doc) {
+      var cv = doc.createElement('canvas'); cv.width = 256; cv.height = 256;
+      cv.style.opacity = this.op; this.tiles.push(cv);
+      var n = 1 << z; if (z < 5 || z > 10 || c.y < 0 || c.y >= n) return cv;
+      var x = ((c.x % n) + n) % n, im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = function () {
+        try {
+          var ctx = cv.getContext('2d'); ctx.drawImage(im, 0, 0);
+          var d = ctx.getImageData(0, 0, 256, 256), a = d.data;
+          for (var i = 0; i < a.length; i += 4) {
+            if (!a[i + 3]) continue;
+            var r = a[i], gg = a[i + 1], b = a[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+            if ((b >= gg && r >= 60) || (mx - mn < 50)) a[i + 3] = 0;   // clear air and gray
+          }
+          ctx.putImageData(d, 0, 0);
+        } catch (e) { /* leave the tile blank */ }
+      };
+      im.src = BASE + 'cache/tile.py/1.0.0/ridge::EVX-N0B-' + this.ts + '/' + z + '/' + x + '/' + c.y + '.png';
+      return cv;
+    };
+    Layer.prototype.releaseTile = function (t) { var i = this.tiles.indexOf(t); if (i >= 0) this.tiles.splice(i, 1); };
+    Layer.prototype.setOpacity = function (v) { this.op = v; this.tiles.forEach(function (t) { t.style.opacity = v; }); };
+    function stamp(s) { return s.replace(/[-:T]/g, '').replace('Z', '').slice(0, 12); }
     function show(i) {
       cur = i;
-      layers.forEach(function (l, j) { l.setOpacity(j === i ? 0.8 : 0); });
-      var ago = (STEPS - 1 - i) * 5;
-      label.textContent = ago ? ago + ' min ago' : 'Latest';
+      layers.forEach(function (l, j) { l.setOpacity(j === i ? 0.85 : 0); });
+      var mins = Math.round((Date.now() - frames[i].t) / 60000);
+      var last = i === frames.length - 1;
+      label.textContent = last ? 'Latest' : mins + ' min ago';
     }
     function tick() {
       if (!playing) return;
-      var last = cur === STEPS - 1;
-      show(last ? 0 : cur + 1);
-      timer = setTimeout(tick, cur === STEPS - 1 ? 1800 : 450);
+      show(cur === frames.length - 1 ? 0 : cur + 1);
+      timer = setTimeout(tick, cur === frames.length - 1 ? 1800 : 450);
     }
     function setPlaying(p) {
       playing = p; clearTimeout(timer);
       playBtn.textContent = p ? 'Pause' : 'Play';
-      if (p) timer = setTimeout(tick, 450); else show(STEPS - 1);
+      if (p) timer = setTimeout(tick, 450); else show(frames.length - 1);
     }
     function build() {
       clearTimeout(timer);
       var dark = !!(window.briefingTheme && window.briefingTheme.isDark());
-      var mapEl = el('div', { 'class': 'gmap radarmap', role: 'region', 'aria-label': 'Animated weather radar map for the Florida Panhandle' });
+      var mapEl = el('div', { 'class': 'gmap radarmap', role: 'region', 'aria-label': 'Animated weather radar map from the Eglin AFB radar' });
       var opts = { center: HOME, zoom: 7, mapId: 'DEMO_MAP_ID', mapTypeControl: false, streetViewControl: false,
         fullscreenControl: true, gestureHandling: 'cooperative' };
       if (g.ColorScheme) opts.colorScheme = dark ? g.ColorScheme.DARK : g.ColorScheme.LIGHT;
       map = new MapCls(mapEl, opts);
-      layers = [];
-      for (var i = 0; i < STEPS; i++) {
-        (function (k) {
-          var t = new g.ImageMapType({ tileSize: new g.Size(256, 256), opacity: 0,
-            getTileUrl: function (c, z) { return (z < 3 || z > 10) ? null : tileUrl(k, z, ((c.x % (1 << z)) + (1 << z)) % (1 << z), c.y); } });
-          map.overlayMapTypes.push(t); layers.push(t);
-        })(STEPS - 1 - i);
-      }
+      layers = frames.map(function (f) { var l = new Layer(f.id); map.overlayMapTypes.push(l); return l; });
       label = el('span', { 'class': 'radarlabel', text: 'Latest' });
       playBtn = el('button', { type: 'button', 'class': 'radarbtn', text: 'Pause' });
       playBtn.addEventListener('click', function () { setPlaying(!playing); });
@@ -715,12 +727,23 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
       radarSec.insertBefore(el('div', { 'class': 'radarwrap' }, [mapEl, bar]), rimg);
       rimg.style.display = 'none';
       radarSec.removeAttribute('hidden');
-      rcap.textContent = 'NWS NEXRAD radar via Iowa State Mesonet, last 50 minutes. Not live: reload the page for newer frames.';
-      show(STEPS - 1);
+      var span = Math.round((frames[frames.length - 1].t - frames[0].t) / 60000);
+      rcap.textContent = 'NWS Eglin AFB (KEVX) radar via Iowa State Mesonet, last ' + span + ' minutes. Faint clear-air returns are hidden. Not live: reload the page for newer frames.';
+      show(frames.length - 1);
       playing = !reduce; playBtn.textContent = playing ? 'Pause' : 'Play';
       if (playing) timer = setTimeout(tick, 600);
     }
-    function start() { build(); window.__briefingRedrawRadar = build; }
+    var end = new Date(), start = new Date(end.getTime() - 75 * 60000);
+    function iso(d) { return d.toISOString().slice(0, 16) + 'Z'; }
+    fetch(BASE + 'json/radar.py?operation=list&radar=EVX&product=N0B&start=' + iso(start) + '&end=' + iso(end))
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) {
+        var sc = (j.scans || []).slice(-MAXF);
+        if (sc.length < 3) throw 0;
+        frames = sc.map(function (s) { return { id: stamp(s.ts), t: new Date(s.ts).getTime() }; });
+        build();
+        window.__briefingRedrawRadar = build;
+      }).catch(function () { /* keep the NWS image */ });
   };
   // The radar file is refreshed on its own schedule, so show when it was fetched.
   fetch('radar.gif', { method: 'HEAD', cache: 'no-store' }).then(function (res) {
