@@ -1,0 +1,238 @@
+{
+ "dayLabel": "Thursday, Nov 5",
+ "place": "Mossy Head \u00b7 Walton County, FL",
+ "updated": "6:34 PM CT",
+ "verdict": {
+  "level": "watch",
+  "label": "Watch",
+  "title": "Thunderstorms possible 11a to 5p",
+  "text": "Slow down early where fog sits on rural roads. Expect wet job sites and slick dump areas. Lightning can pause loading, so haul the heavy loads before the storms."
+ },
+ "weather": {
+  "sky": "Scattered Showers And Thunderstorms",
+  "high": 80,
+  "low": 66,
+  "sunrise": "6:03 AM",
+  "sunset": "4:54 PM",
+  "sampleHours": false,
+  "hours": [
+   {
+    "h": "5a",
+    "temp": 67,
+    "rain": 11,
+    "wind": 0,
+    "gust": 5,
+    "fog": true,
+    "storm": false
+   },
+   {
+    "h": "6a",
+    "temp": 66,
+    "rain": 20,
+    "wind": 0,
+    "gust": 5,
+    "fog": true,
+    "storm": false
+   },
+   {
+    "h": "7a",
+    "temp": 68,
+    "rain": 14,
+    "wind": 0,
+    "gust": 5,
+    "fog": true,
+    "storm": false
+   },
+   {
+    "h": "8a",
+    "temp": 71,
+    "rain": 10,
+    "wind": 0,
+    "gust": 6,
+    "fog": true,
+    "storm": false
+   },
+   {
+    "h": "9a",
+    "temp": 74,
+    "rain": 14,
+    "wind": 0,
+    "gust": 7,
+    "fog": false,
+    "storm": false
+   },
+   {
+    "h": "10a",
+    "temp": 77,
+    "rain": 16,
+    "wind": 5,
+    "gust": 7,
+    "fog": false,
+    "storm": false
+   },
+   {
+    "h": "11a",
+    "temp": 78,
+    "rain": 26,
+    "wind": 5,
+    "gust": 8,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "12p",
+    "temp": 79,
+    "rain": 41,
+    "wind": 5,
+    "gust": 10,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "1p",
+    "temp": 79,
+    "rain": 25,
+    "wind": 5,
+    "gust": 10,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "2p",
+    "temp": 79,
+    "rain": 31,
+    "wind": 5,
+    "gust": 10,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "3p",
+    "temp": 80,
+    "rain": 27,
+    "wind": 5,
+    "gust": 10,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "4p",
+    "temp": 78,
+    "rain": 27,
+    "wind": 5,
+    "gust": 10,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "5p",
+    "temp": 76,
+    "rain": 25,
+    "wind": 5,
+    "gust": 8,
+    "fog": false,
+    "storm": true
+   },
+   {
+    "h": "6p",
+    "temp": 73,
+    "rain": 7,
+    "wind": 5,
+    "gust": 8,
+    "fog": false,
+    "storm": false
+   }
+  ],
+  "facts": [
+   {
+    "k": "Rain today",
+    "v": "0.18\"",
+    "note": "Peak chance 41%"
+   },
+   {
+    "k": "Last 48 hours",
+    "v": "0.12\"",
+    "note": "Station KCEW"
+   },
+   {
+    "k": "Wind",
+    "v": "0\u20135 mph",
+    "note": "Gusts to 10 mph"
+   },
+   {
+    "k": "Heat index",
+    "v": "Under 100\u00b0F",
+    "note": "No heat concern"
+   },
+   {
+    "k": "Sunrise",
+    "v": "6:03 AM",
+    "note": ""
+   },
+   {
+    "k": "Sunset",
+    "v": "4:54 PM",
+    "note": ""
+   }
+  ],
+  "alerts": [
+   {
+    "level": "w",
+    "text": "Rip Current Statement"
+   }
+  ]
+ },
+ "roads": {
+  "sample": false,
+  "items": [],
+  "emptyText": "No major closures or crashes found.",
+  "emptyNote": "FL511 shows no full closures or crashes in the Panhandle right now. Alabama roads are not checked here, so look at the Alabama 511 link.",
+  "links": [
+   {
+    "label": "FL511 map",
+    "url": "https://fl511.com"
+   },
+   {
+    "label": "FDOT District 3",
+    "url": "https://www.fdot.gov/districts/district3"
+   },
+   {
+    "label": "Alabama 511",
+    "url": "https://algotraffic.com"
+   }
+  ]
+ },
+ "news": [
+  {
+   "title": "Seven Walton County Jail inmates graduate from construction program",
+   "text": "",
+   "source": "WJHG",
+   "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOTlBxczY5cW1vOHVLaERkR0ZQTUtMZ01Sa3h2UFM0LVM1RjdBZU84TUtUcWQwVDZSUFF4YUJPN3ctTURHS2dVam1qRVluRHRKYmhtLTBjVWs2QTlkU21SQ215b0FhZmhxaUphTlM0bUlEM0NxcFZyX2FVdm5rQ1VEeko1c0R6RW93MERRQnJPZGdWRTE5QzNSM3V5RQ?oc=5"
+  },
+  {
+   "title": "Multi-agency resource centers opening in the Panhandle",
+   "text": "",
+   "source": "WUWF",
+   "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxON3YteDRmTk1kR3BoV3RzS1JZaGRNU3BHQjFRdzgyYjFYTk45ZEtqQ1hsWldoT3RrOHhFMkkxOVJHaXI4VkgwS3JfdjV2NjNDNWZpdnRKb3dBdlNaSmxVUEtLT2xyLXFSWlZYUUp5cDczZnIzdTZuTHBLRWpPMUg1aGZhRVRVR3lJVlJ3STR6dWJpUEMyNXZPU2hxaXp3N19OSEN0Z2Myc2R4X2c?oc=5"
+  },
+  {
+   "title": "Cooler and drier air arrives over the weekend",
+   "text": "",
+   "source": "mypanhandle.com",
+   "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxOQlN3NTl0RXhFVHUwbWdIZ3RYWUkybjJVS2RiMUZXX1BjNGJYNXppcHZnbDMtVDRCdkpFNUpVYVN4WkdDWFp1cjVLaE9Oek9IX2h6dW14Qi1La1BqVFE3RHpSV1cxU04zbkRwWFdJQnZTa1FublZEVkRnR3ROejRVeEVfSHFLd2Fsa2RXQWpXcTlKYzVDZHVKYW5VaFRGUjlXVUNiQWRn0gGmAUFVX3lxTE5CU3c1OXRFeEVUdTBtZ0hndFhZSTJuMlVLZGIxRldfUGM0Ylg1emlwdmdsMy1UNEJ2SkU1SlVhU3haR0NYWnVyNUtoT056T0hfaHp1bXhCLUtrUGpUUTdEelJXVzFTTjNuRHBYV0lCdlNrUW5uVkRWRGdHdE56NFV4RV9IcUt3YWxrZFdBaldxOUpjNUNkdUphblVoVEZSOVdVQ2JBZGc?oc=5"
+  },
+  {
+   "title": "A part of B.C. now observes the same time as a part of Florida",
+   "text": "",
+   "source": "CBC",
+   "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxPanBTLXN1T0hqTGJqcndTMEx5cVlNUXBGREZMR0RyeGR2dlJsZFVqVmc1MTJZd0xhOTBEUk80OG15bVFVd2dRTWZWWmp4ckhRQTlnYTdEX1BkWUhsdXpiSE1SWjFlTmlkZ09FakZRMHNRQ3k0XzZiSGliek8zUGlUUHg0T2Y?oc=5"
+  },
+  {
+   "title": "Diesel Prices Surge on Tightening Global Supply - Energy News, Top Headlines, Commentaries, Features & Events",
+   "text": "",
+   "source": "EnergyNow.com",
+   "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOLU4wZS1pbVV2TEJBbXVTU0MwV3FlSk9zS3phS2FIaFdrUWFVVlN4VDY2aUN3VkxJNmM3NEQ4d0F4RHhBdklMUk5BaFZVdXMzN2dWamZ3MzU2aFVVSVlDSkJCQUpNYlkwMmYyS2dESkVDNDlOQndRVnpVb3ZKdzVQV3lhSWE?oc=5"
+  }
+ ],
+ "sources": "Weather: National Weather Service, Tallahassee. Roads: FL511 (Florida only). Headlines: Google News. The map is a schematic and not to scale."
+}

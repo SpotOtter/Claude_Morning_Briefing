@@ -1,0 +1,624 @@
+<title>Mossy Head Briefing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: a highway-sign field guide for one driver's shift.
+   Asphalt masthead with a dashed center line, a single verdict card first,
+   then weather timeline, road closures, headlines. Barlow is the typeface family
+   the US highway-sign tradition inspired; yellow is used only as the road marking. */
+:root {
+  --bg: #E7E9EC;
+  --surface: #F8F9FA;
+  --ink: #1B1F24;
+  --muted: #5A626C;
+  --line: #D2D6DB;
+  --road: #23272D;
+  --road-ink: #F2F3F5;
+  --road-muted: #A9B0B9;
+  --mark: #F2B705;
+  --good: #1D7A4B;
+  --good-bg: #DCEFE4;
+  --warn: #9A5200;
+  --warn-bg: #FBE9CC;
+  --bad: #B3261E;
+  --bad-bg: #F9DAD7;
+  --rain: #2B6CB0;
+  --rain-soft: #CFE0F3;
+  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121519;
+    --surface: #1C2025;
+    --ink: #E8EAED;
+    --muted: #98A1AB;
+    --line: #2C3238;
+    --road: #0C0E11;
+    --road-ink: #F2F3F5;
+    --road-muted: #8F98A2;
+    --mark: #F2B705;
+    --good: #5AC993;
+    --good-bg: #173024;
+    --warn: #F2A545;
+    --warn-bg: #3A2A12;
+    --bad: #FF7168;
+    --bad-bg: #3D1B19;
+    --rain: #5DA4EA;
+    --rain-soft: #1E3550;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121519;
+  --surface: #1C2025;
+  --ink: #E8EAED;
+  --muted: #98A1AB;
+  --line: #2C3238;
+  --road: #0C0E11;
+  --road-ink: #F2F3F5;
+  --road-muted: #8F98A2;
+  --mark: #F2B705;
+  --good: #5AC993;
+  --good-bg: #173024;
+  --warn: #F2A545;
+  --warn-bg: #3A2A12;
+  --bad: #FF7168;
+  --bad-bg: #3D1B19;
+  --rain: #5DA4EA;
+  --rain-soft: #1E3550;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+a { color: inherit; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+
+/* Masthead */
+.mast {
+  background: var(--road);
+  color: var(--road-ink);
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding: 22px max(16px, env(safe-area-inset-right, 0px)) 26px max(16px, env(safe-area-inset-left, 0px));
+  position: relative;
+}
+.mast::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 10px; height: 3px;
+  background: repeating-linear-gradient(90deg, var(--mark) 0 22px, transparent 22px 38px);
+}
+.mast-in { max-width: 720px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 6px 16px; padding-bottom: 14px; }
+.mast .place { font: 600 14px/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: var(--road-muted); margin: 0 0 8px; }
+.mast h1 { font: 700 clamp(38px, 9vw, 56px)/.95 var(--font-display); text-transform: uppercase; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.mast .stamp { font: 500 14px/1.3 var(--font-body); color: var(--road-muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+h2 { font: 700 22px/1 var(--font-display); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform: none; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+
+/* Verdict */
+.verdict { display: grid; grid-template-columns: auto 1fr; gap: 0; padding: 0; overflow: hidden; }
+.verdict .badge { display: flex; align-items: center; justify-content: center; padding: 14px 16px; font: 700 26px/1 var(--font-display); text-transform: uppercase; letter-spacing: .06em; writing-mode: horizontal-tb; min-width: 96px; text-align: center; }
+.verdict .body { padding: 14px 16px; min-width: 0; }
+.verdict .body h3 { font: 700 26px/1.05 var(--font-display); margin: 0 0 6px; text-wrap: balance; }
+.verdict .body p { margin: 0; color: var(--muted); }
+.v-clear .badge { background: var(--good-bg); color: var(--good); }
+.v-watch .badge { background: var(--warn-bg); color: var(--warn); }
+.v-stop  .badge { background: var(--bad-bg);  color: var(--bad); }
+
+/* Weather */
+.now { display: flex; flex-wrap: wrap; gap: 8px 28px; align-items: flex-end; margin-bottom: 14px; }
+.hi { font: 700 76px/.85 var(--font-display); font-variant-numeric: tabular-nums; }
+.hi sup { font-size: 34px; vertical-align: top; position: relative; top: 4px; }
+.lohi { display: flex; flex-direction: column; gap: 2px; color: var(--muted); font-size: 15px; }
+.lohi strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.sky { font: 600 20px/1.2 var(--font-display); letter-spacing: .02em; text-transform: uppercase; flex-basis: 100%; }
+
+.sample-tag { display: inline-block; font: 600 12px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; background: var(--warn-bg); color: var(--warn); padding: 5px 8px; border-radius: 4px; }
+
+.radar img { display: block; width: 100%; height: auto; border-radius: 6px; background: #000; }
+.radar .cap { margin-top: 8px; font-size: 13px; color: var(--muted, #666); }
+.scroller { overflow-x: auto; margin: 0 -16px; padding: 0 16px 6px; -webkit-overflow-scrolling: touch; }
+.hours { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(46px, 1fr); gap: 0; min-width: 100%; width: max-content; }
+.hr { display: grid; grid-template-rows: auto 64px auto auto auto auto; justify-items: center; align-items: end; padding: 6px 0; border-left: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.hr:first-child { border-left: 0; }
+.hr .t { font: 600 13px/1 var(--font-body); color: var(--muted); padding-bottom: 6px; }
+.hr .bar { width: 22px; background: var(--rain); border-radius: 3px 3px 0 0; min-height: 3px; }
+.hr .pct { font: 600 12px/1 var(--font-body); color: var(--rain); padding-top: 4px; }
+.hr .deg { font: 700 22px/1 var(--font-display); padding-top: 8px; }
+.hr .wind { font: 500 12px/1.2 var(--font-body); color: var(--muted); padding-top: 4px; text-align: center; }
+.hr .tag { font: 600 10px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; margin-top: 6px; padding: 3px 4px; border-radius: 3px; min-height: 16px; }
+.tag.storm { background: var(--warn-bg); color: var(--warn); }
+.tag.fog { background: var(--rain-soft); color: var(--rain); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+.fact { border-top: 2px solid var(--line); padding-top: 8px; min-width: 0; }
+.fact dt { font: 600 12px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.fact dd { margin: 0; font: 700 22px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.fact dd.na { color: var(--muted); font-weight: 600; font-size: 18px; }
+.fact dd small { display: block; font: 400 13px/1.3 var(--font-body); color: var(--muted); margin-top: 3px; }
+
+.alerts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.chip { font: 600 14px/1 var(--font-body); padding: 8px 10px; border-radius: 6px; }
+.chip.ok { background: var(--good-bg); color: var(--good); }
+.chip.w { background: var(--warn-bg); color: var(--warn); }
+.chip.b { background: var(--bad-bg); color: var(--bad); }
+
+/* Roads */
+.roads { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.road { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.shield { min-width: 54px; text-align: center; font: 700 20px/1 var(--font-display); padding: 8px 6px; border-radius: 6px 6px 14px 14px; background: var(--road); color: var(--road-ink); border: 2px solid var(--road-ink); }
+.road h3 { font: 600 17px/1.25 var(--font-body); margin: 0 0 3px; }
+.road p { margin: 0; color: var(--muted); font-size: 15px; }
+.when { display: inline-block; font: 700 11px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; padding: 4px 6px; border-radius: 3px; margin-right: 8px; vertical-align: 2px; background: var(--bad-bg); color: var(--bad); }
+.empty { display: flex; gap: 12px; align-items: center; color: var(--muted); }
+.empty strong { color: var(--ink); }
+.links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.btn { font: 600 14px/1 var(--font-body); text-decoration: none; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.btn:hover { border-color: var(--muted); }
+
+/* Map */
+.mapbox { overflow-x: auto; margin: 0 -16px 10px; padding: 0 16px 4px; -webkit-overflow-scrolling: touch; }
+.map { display: block; width: 100%; min-width: 600px; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+.m-land { fill: var(--bg); }
+.m-water { fill: var(--rain-soft); }
+.m-state { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 7 6; fill: none; }
+.m-ring { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 6; opacity: .8; }
+.m-i { stroke: var(--ink); stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-r { stroke: var(--muted); stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-town { fill: var(--ink); }
+.m-lab { font: 500 13px var(--font-body); fill: var(--muted); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round; }
+.m-home { font: 700 15px var(--font-body); fill: var(--ink); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.m-sea { font: italic 500 14px var(--font-body); fill: var(--rain); }
+.m-shield rect { fill: var(--road); stroke: var(--road-ink); stroke-width: 1.5; }
+.m-shield text { font: 700 12px var(--font-display); fill: var(--road-ink); }
+.m-pin-closure { fill: var(--bad); }
+.m-pin-crash { fill: var(--warn); }
+.m-pin { stroke: var(--surface); stroke-width: 2.5; }
+.m-pinnum { font: 700 14px var(--font-body); fill: var(--surface); }
+.m-note { font: 500 11px var(--font-body); fill: var(--muted); }
+.maplegend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); margin: 0 0 16px; }
+.lg-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+.lg-dot.closure { background: var(--bad); }
+.lg-dot.crash { background: var(--warn); }
+.num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font: 700 13px/1 var(--font-body); margin-right: 8px; vertical-align: 1px; color: var(--surface); background: var(--bad); }
+.num.crash { background: var(--warn); }
+.when.crash { background: var(--warn-bg); color: var(--warn); }
+
+.tips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tips li { padding: 12px 0; border-top: 1px solid var(--line); }
+.tips li:first-child { border-top: 0; padding-top: 0; }
+.tips li:last-child { padding-bottom: 0; }
+.tips .th { font: 700 17px/1.2 var(--font-body); margin: 0 0 3px; }
+.tips p { margin: 0; color: var(--muted); font-size: 15px; }
+.basis { font: 600 12px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; background: var(--warn-bg); color: var(--warn); padding: 5px 8px; border-radius: 4px; }
+.basis.rand { background: var(--good-bg); color: var(--good); }
+/* Headlines */
+.news { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.news li { padding: 12px 0; border-top: 1px solid var(--line); }
+.news li:first-child { border-top: 0; padding-top: 0; }
+.news li:last-child { padding-bottom: 0; }
+.news a { text-decoration: none; }
+.news a:hover h3 { text-decoration: underline; }
+.news h3 { font: 600 18px/1.25 var(--font-body); margin: 0 0 4px; text-wrap: balance; }
+.news p { margin: 0; color: var(--muted); font-size: 15px; }
+.news .src { font: 600 12px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; display: block; }
+
+footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
+@media (max-width: 460px) {
+  .verdict { grid-template-columns: 1fr; }
+  .verdict .badge { justify-content: flex-start; padding: 10px 16px; font-size: 22px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card { transition: border-color .2s; }
+}
+</style>
+
+<header class="mast">
+  <div class="mast-in">
+    <div>
+      <p class="place" id="place"></p>
+      <h1 id="day"></h1>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </div>
+</header>
+
+<main class="wrap" id="app" aria-live="polite"></main>
+
+<script type="application/json" id="briefing-data">
+{
+  "dayLabel": "Thursday, Nov 5",
+  "place": "Mossy Head · Walton County, FL",
+  "updated": "4:45 AM CT",
+  "verdict": {
+    "level": "watch",
+    "label": "Watch",
+    "title": "Foggy start, storms 11 AM to 5 PM",
+    "text": "Slow down early where fog sits on rural roads. Expect wet job sites and slick dump areas after the midday storms. Lightning can pause loading, so plan the heavy hauls for the morning."
+  },
+  "weather": {
+    "sky": "Warm, foggy early, scattered thunderstorms midday",
+    "high": 80,
+    "low": 68,
+    "sunrise": null,
+    "sunset": null,
+    "sampleHours": true,
+    "hours": [
+      {"h":"5a","temp":68,"rain":5,"wind":5,"gust":9,"fog":true},
+      {"h":"6a","temp":68,"rain":5,"wind":5,"gust":9,"fog":true},
+      {"h":"7a","temp":69,"rain":10,"wind":6,"gust":10,"fog":true},
+      {"h":"8a","temp":71,"rain":10,"wind":7,"gust":12,"fog":true},
+      {"h":"9a","temp":74,"rain":15,"wind":8,"gust":14},
+      {"h":"10a","temp":76,"rain":25,"wind":9,"gust":15},
+      {"h":"11a","temp":78,"rain":50,"wind":9,"gust":16,"storm":true},
+      {"h":"12p","temp":79,"rain":60,"wind":10,"gust":17,"storm":true},
+      {"h":"1p","temp":80,"rain":60,"wind":10,"gust":17,"storm":true},
+      {"h":"2p","temp":80,"rain":55,"wind":10,"gust":16,"storm":true},
+      {"h":"3p","temp":79,"rain":50,"wind":9,"gust":15,"storm":true},
+      {"h":"4p","temp":78,"rain":40,"wind":8,"gust":14,"storm":true},
+      {"h":"5p","temp":76,"rain":25,"wind":7,"gust":12,"storm":true},
+      {"h":"6p","temp":74,"rain":15,"wind":6,"gust":10}
+    ],
+    "facts": [
+      {"k":"Rain today","v":"0.1–0.25\"","note":"Mostly 11 AM to 5 PM"},
+      {"k":"Last 48 hours","v":null,"note":"Not found this run"},
+      {"k":"Wind","v":"5–10 mph","note":"Gusts to 17 mph"},
+      {"k":"Heat index","v":"Under 100°F","note":"No heat concern"},
+      {"k":"Sunrise","v":null,"note":""},
+      {"k":"Sunset","v":null,"note":""}
+    ],
+    "alerts": [
+      {"level":"ok","text":"No NWS watches or warnings for Walton, Okaloosa, Holmes, Washington or Santa Rosa"}
+    ]
+  },
+  "roads": {
+    "sample": true,
+    "items": [
+      {"type":"crash","route":"I-10","when":"Now","where":"Eastbound near Crestview (exit 56)","detail":"Crash blocking the right lane. Expect a 15 to 20 minute delay.","detour":"","lat":30.80,"lon":-86.55,"url":""},
+      {"type":"closure","route":"US-98","when":"Today","where":"Destin, one lane each way","detail":"Lane closures for bridge work from 9 AM to 3 PM.","detour":"SR-293 and the Mid-Bay Bridge.","lat":30.39,"lon":-86.48,"url":""}
+    ],
+    "emptyText": "No major closures or crashes confirmed.",
+    "emptyNote": "The searches found no dated closure or crash on I-10, US-331, US-90 or US-98. Check the live maps before you roll.",
+    "links": [
+      {"label":"FL511 map","url":"https://fl511.com"},
+      {"label":"FDOT District 3","url":"https://www.fdot.gov/districts/district3"},
+      {"label":"Alabama 511","url":"https://algotraffic.com"}
+    ]
+  },
+  "news": [
+    {"title":"Florida diesel averages $5.97 a gallon, down from $6.12 a week ago","text":"Crestview to Fort Walton Beach is $5.77. Pensacola is $5.70 and Panama City is $5.75.","source":"AAA · Nov 3","url":"https://gasprices.aaa.com/?state=FL"},
+    {"title":"Pensacola is getting a pro women's softball team","text":"The team will play at Blue Wahoos Stadium.","source":"WEAR · Nov 4","url":"https://weartv.com/news/local/pensacola-gets-professional-womens-softball-team-will-play-at-blue-wahoos-stadium"}
+  ],
+  "sources": "Weather: National Weather Service, Tallahassee. Roads: FL511 and local news. The hourly numbers and the two incidents on the map are examples until the daily task starts filling them in. The map is a schematic and not to scale."
+}
+</script>
+
+<script>
+(function () {
+  var inline = JSON.parse(document.getElementById('briefing-data').textContent);
+  fetch('data.json', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .catch(function () { return inline; }).then(function (data) { render(data); });
+  function render(data) {
+
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === 'class') n.className = attrs[k];
+      else if (k === 'text') n.textContent = attrs[k];
+      else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? u : null; }
+
+  function svgEl(tag, attrs, kids) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+
+  // Schematic map of the central Panhandle. Positions are approximate, not survey data.
+  function buildMap(items) {
+    var LON0 = -87.4, LAT1 = 31.4, K = 380, CX = Math.cos(30.8 * Math.PI / 180);
+    function P(lon, lat) { return [(lon - LON0) * CX * K, (LAT1 - lat) * K]; }
+    function pts(arr) { return arr.map(function (a) { var p = P(a[0], a[1]); return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+    var svg = svgEl('svg', { 'class': 'map', viewBox: '0 0 760 540', role: 'img',
+      'aria-label': 'Schematic map of the Florida Panhandle roads with markers for closures and crashes' });
+
+    svg.appendChild(svgEl('rect', { x: 0, y: 0, width: 760, height: 540, 'class': 'm-land' }));
+    var coast = [[-87.4,30.30],[-87.2,30.31],[-87.0,30.33],[-86.8,30.37],[-86.6,30.38],[-86.45,30.38],[-86.3,30.36],
+                 [-86.1,30.33],[-85.95,30.28],[-85.85,30.20],[-85.75,30.13],[-85.65,30.08],[-85.5,29.95],[-85.4,29.88],
+                 [-85.07,29.7],[-87.4,29.7]];
+    svg.appendChild(svgEl('polygon', { points: pts(coast), 'class': 'm-water' }));
+
+    var s1 = P(-87.4, 31.0), s2 = P(-85.07, 31.0);
+    svg.appendChild(svgEl('line', { x1: s1[0], y1: s1[1], x2: s2[0], y2: s2[1], 'class': 'm-state' }));
+    svg.appendChild(svgEl('text', { x: 12, y: s1[1] - 8, 'class': 'm-lab', text: 'ALABAMA' }));
+    svg.appendChild(svgEl('text', { x: 12, y: s1[1] + 20, 'class': 'm-lab', text: 'FLORIDA' }));
+
+    var home = P(-86.31, 30.77);
+    [25, 50].forEach(function (mi) {
+      svg.appendChild(svgEl('circle', { cx: home[0], cy: home[1], r: (mi / 69 * K).toFixed(1), 'class': 'm-ring' }));
+    });
+    var r25 = 25 / 69 * K;
+    svg.appendChild(svgEl('text', { x: home[0] + 6, y: home[1] + r25 + 14, 'class': 'm-note', text: '25 mi' }));
+    var r50 = 50 / 69 * K;
+    svg.appendChild(svgEl('text', { x: home[0] + 6, y: Math.min(530, home[1] + r50 + 14), 'class': 'm-note', text: '50 mi' }));
+
+    var minor = {
+      'US-98':  [[-87.4,30.42],[-87.22,30.42],[-87.16,30.37],[-86.86,30.40],[-86.62,30.42],[-86.5,30.40],[-86.36,30.38],[-86.2,30.37],[-86.0,30.30],[-85.85,30.20],[-85.8,30.18],[-85.66,30.16],[-85.4,30.07]],
+      'US-331': [[-86.22,30.37],[-86.13,30.50],[-86.12,30.72],[-86.29,30.97],[-86.33,31.0],[-86.25,31.28],[-86.2,31.4]],
+      'US-231': [[-85.66,30.16],[-85.55,30.35],[-85.5,30.6],[-85.38,30.78],[-85.37,31.0],[-85.39,31.22],[-85.38,31.4]],
+      'SR-85':  [[-86.62,30.42],[-86.48,30.52],[-86.57,30.76],[-86.45,30.96],[-86.48,31.31],[-86.48,31.4]],
+      'SR-20':  [[-86.48,30.52],[-86.3,30.51],[-86.13,30.5],[-85.9,30.45],[-85.65,30.4],[-85.5,30.4]],
+      'US-90':  [[-87.22,30.43],[-87.04,30.63],[-86.71,30.72],[-86.57,30.76],[-86.31,30.77],[-86.12,30.72],[-85.94,30.72],[-85.68,30.79],[-85.54,30.78],[-85.23,30.78],[-85.07,30.8]]
+    };
+    Object.keys(minor).forEach(function (k) { svg.appendChild(svgEl('polyline', { points: pts(minor[k]), 'class': 'm-r' })); });
+    var i10 = [[-87.3,30.56],[-87.05,30.65],[-86.8,30.74],[-86.57,30.80],[-86.31,30.81],[-86.12,30.77],[-85.94,30.77],[-85.68,30.83],[-85.54,30.82],[-85.23,30.81],[-85.07,30.85]];
+    svg.appendChild(svgEl('polyline', { points: pts(i10), 'class': 'm-i' }));
+
+    function shield(lon, lat, label) {
+      var p = P(lon, lat), w = label.length * 7.5 + 10;
+      svg.appendChild(svgEl('g', { 'class': 'm-shield', transform: 'translate(' + (p[0] - w / 2).toFixed(1) + ',' + (p[1] - 9).toFixed(1) + ')' }, [
+        svgEl('rect', { width: w, height: 18, rx: 4 }),
+        svgEl('text', { x: w / 2, y: 13.5, 'text-anchor': 'middle', text: label })
+      ]));
+    }
+    shield(-86.88, 30.77, 'I-10');
+    shield(-86.9, 30.385, 'US-98');
+    shield(-86.125, 30.6, 'US-331');
+    shield(-85.46, 30.5, 'US-231');
+    shield(-86.5, 30.9, 'SR-85');
+
+    var towns = [
+      ['Pensacola', -87.22, 30.42, 9, 5, 'start'], ['Milton', -87.04, 30.63, 0, 18, 'middle'],
+      ['Crestview', -86.57, 30.76, -9, 24, 'end'], ['DeFuniak Springs', -86.12, 30.72, 10, 18, 'start'],
+      ['Fort Walton Beach', -86.62, 30.42, -2, 20, 'end'], ['Destin', -86.5, 30.39, 6, 20, 'start'],
+      ['Niceville', -86.48, 30.52, 9, 4, 'start'], ['Freeport', -86.13, 30.5, 9, 4, 'start'],
+      ['Panama City', -85.66, 30.16, 10, 4, 'start'], ['Chipley', -85.54, 30.78, 0, 28, 'middle'],
+      ['Marianna', -85.23, 30.78, 0, 28, 'middle'], ['Dothan', -85.39, 31.22, 9, 4, 'start'],
+      ['Florala', -86.33, 31.0, 9, 18, 'start'], ['Andalusia', -86.48, 31.31, 9, 4, 'start']
+    ];
+    towns.forEach(function (t) {
+      var p = P(t[1], t[2]);
+      svg.appendChild(svgEl('circle', { cx: p[0], cy: p[1], r: 3.5, 'class': 'm-town' }));
+      svg.appendChild(svgEl('text', { x: p[0] + t[3], y: p[1] + t[4], 'text-anchor': t[5], 'class': 'm-lab', text: t[0] }));
+    });
+
+    var sea = P(-86.4, 30.06);
+    svg.appendChild(svgEl('text', { x: sea[0], y: sea[1], 'class': 'm-sea', 'text-anchor': 'middle', text: 'Gulf of Mexico' }));
+
+    svg.appendChild(svgEl('circle', { cx: home[0], cy: home[1], r: 9, fill: 'var(--mark)', stroke: 'var(--road)', 'stroke-width': 3 }));
+    svg.appendChild(svgEl('text', { x: home[0], y: home[1] - 16, 'text-anchor': 'middle', 'class': 'm-home', text: 'Mossy Head' }));
+
+    (items || []).forEach(function (c, i) {
+      if (typeof c.lat !== 'number' || typeof c.lon !== 'number') return;
+      var p = P(c.lon, c.lat);
+      var kind = c.type === 'crash' ? 'crash' : 'closure';
+      svg.appendChild(svgEl('g', { transform: 'translate(' + p[0].toFixed(1) + ',' + p[1].toFixed(1) + ')' }, [
+        svgEl('circle', { r: 14, 'class': 'm-pin m-pin-' + kind }),
+        svgEl('text', { 'class': 'm-pinnum', 'text-anchor': 'middle', y: 5, text: String(i + 1) })
+      ]));
+    });
+
+    svg.appendChild(svgEl('text', { x: 748, y: 530, 'text-anchor': 'end', 'class': 'm-note', text: 'Schematic map, not to scale' }));
+    return svg;
+  }
+  function link(label, url, cls) {
+    var u = safeUrl(url);
+    return u ? el('a', { 'class': cls || 'btn', href: u, target: '_blank', rel: 'noopener', text: label }) : null;
+  }
+
+  document.getElementById('place').textContent = data.place;
+  document.getElementById('day').textContent = data.dayLabel;
+  document.getElementById('stamp').textContent = 'Updated ' + data.updated;
+
+  var app = document.getElementById('app');
+  var top = el('div', { 'class': 'wrap', style: 'padding-top:20px' });
+  app.appendChild(top);
+
+  // Verdict
+  var v = data.verdict;
+  top.appendChild(el('section', { 'class': 'card verdict v-' + v.level, 'aria-label': 'Work impact' }, [
+    el('div', { 'class': 'badge', text: v.label }),
+    el('div', { 'class': 'body' }, [el('h3', { text: v.title }), el('p', { text: v.text })])
+  ]));
+
+  // Weather
+  var w = data.weather;
+  var wsec = el('section', { 'class': 'card', 'aria-label': 'Weather' });
+  var h2 = el('h2', null, [el('span', { text: 'Weather' })]);
+  if (w.sampleHours) h2.appendChild(el('span', { 'class': 'sample-tag', text: 'Example hourly data' }));
+  wsec.appendChild(h2);
+
+  var hi = el('div', { 'class': 'hi' });
+  hi.appendChild(document.createTextNode(String(w.high)));
+  hi.appendChild(el('sup', { text: '°' }));
+  wsec.appendChild(el('div', { 'class': 'now' }, [
+    hi,
+    el('div', { 'class': 'lohi' }, [
+      el('span', null, [document.createTextNode('Low '), el('strong', { text: w.low + '°' })]),
+      el('span', { text: 'Daytime high' })
+    ]),
+    el('div', { 'class': 'sky', text: w.sky })
+  ]));
+
+  var hours = el('div', { 'class': 'hours', role: 'list' });
+  w.hours.forEach(function (x) {
+    var col = el('div', { 'class': 'hr', role: 'listitem', 'aria-label': x.h + ', ' + x.temp + ' degrees, ' + x.rain + ' percent rain' });
+    col.appendChild(el('div', { 'class': 't', text: x.h }));
+    var barWrap = el('div', { style: 'display:flex;align-items:flex-end;height:64px' });
+    barWrap.appendChild(el('div', { 'class': 'bar', style: 'height:' + Math.max(3, Math.round(x.rain * 0.64)) + 'px' }));
+    col.appendChild(barWrap);
+    col.appendChild(el('div', { 'class': 'pct', text: x.rain + '%' }));
+    col.appendChild(el('div', { 'class': 'deg', text: x.temp + '°' }));
+    col.appendChild(el('div', { 'class': 'wind', text: x.wind + '/' + x.gust }));
+    var tag = x.storm ? el('div', { 'class': 'tag storm', text: 'storm' })
+            : x.fog ? el('div', { 'class': 'tag fog', text: 'fog' })
+            : el('div', { 'class': 'tag' });
+    col.appendChild(tag);
+    hours.appendChild(col);
+  });
+  wsec.appendChild(el('div', { 'class': 'scroller', tabindex: '0' }, [hours]));
+  wsec.appendChild(el('div', { 'class': 'legend' }, [
+    el('span', null, [el('i', { style: 'background:var(--rain)' }), document.createTextNode('Rain chance')]),
+    el('span', { text: 'Wind / gust in mph' })
+  ]));
+
+  var facts = el('dl', { 'class': 'facts' });
+  w.facts.forEach(function (f) {
+    var val = f.v;
+    if (f.k === 'Sunrise' && !val && w.sunrise) val = w.sunrise;
+    if (f.k === 'Sunset' && !val && w.sunset) val = w.sunset;
+    var dd = el('dd', { 'class': val ? '' : 'na', text: val || 'Not available' });
+    if (f.note) dd.appendChild(el('small', { text: f.note }));
+    facts.appendChild(el('div', { 'class': 'fact' }, [el('dt', { text: f.k }), dd]));
+  });
+  wsec.appendChild(facts);
+
+  var alerts = el('div', { 'class': 'alerts' });
+  w.alerts.forEach(function (a) { alerts.appendChild(el('span', { 'class': 'chip ' + a.level, text: a.text })); });
+  wsec.appendChild(alerts);
+  top.appendChild(wsec);
+  var radarSec = el('section', { 'class': 'card radar', 'aria-label': 'Radar', hidden: '' });
+  radarSec.appendChild(el('h2', null, [el('span', { text: 'Radar' })]));
+  var rimg = el('img', { src: 'radar.gif?v=' + encodeURIComponent(data.updated || ''), alt: 'Animated weather radar for the Florida Panhandle showing recent precipitation' });
+  rimg.onload = function () { radarSec.removeAttribute('hidden'); };
+  radarSec.appendChild(rimg);
+  radarSec.appendChild(el('p', { 'class': 'cap', text: 'NWS Eglin AFB radar, recent frames as of the ' + (data.updated || 'morning') + ' update. Not live.' }));
+  top.appendChild(radarSec);
+
+  // Roads
+  var r = data.roads;
+  var rsec = el('section', { 'class': 'card', 'aria-label': 'Road closures' });
+  var rh2 = el('h2', null, [el('span', { text: 'Closures and crashes' })]);
+  if (r.sample) rh2.appendChild(el('span', { 'class': 'sample-tag', text: 'Example incidents' }));
+  else rh2.appendChild(el('small', { text: 'Within 100 miles' }));
+  rsec.appendChild(rh2);
+  rsec.appendChild(el('div', { 'class': 'mapbox', tabindex: '0' }, [buildMap(r.items)]));
+  rsec.appendChild(el('div', { 'class': 'maplegend' }, [
+    el('span', null, [el('i', { 'class': 'lg-dot closure' }), document.createTextNode('Closure')]),
+    el('span', null, [el('i', { 'class': 'lg-dot crash' }), document.createTextNode('Major crash')]),
+    el('span', { text: 'Dashed rings: 25 and 50 miles from Mossy Head' })
+  ]));
+  if (r.items && r.items.length) {
+    var ul = el('ul', { 'class': 'roads' });
+    r.items.forEach(function (c, i) {
+      var kind = c.type === 'crash' ? 'crash' : 'closure';
+      var info = el('div', null, [
+        el('h3', null, [
+          el('span', { 'class': 'num ' + kind, text: String(i + 1) }),
+          el('span', { 'class': 'when ' + kind, text: (kind === 'crash' ? 'Crash · ' : 'Closed · ') + c.when }),
+          document.createTextNode(c.where)
+        ]),
+        el('p', { text: c.detail + (c.detour ? ' Detour: ' + c.detour : '') })
+      ]);
+      var src = link('Source', c.url, '');
+      if (src) { src.style.cssText = 'font-size:13px;color:var(--muted)'; info.appendChild(src); }
+      ul.appendChild(el('li', { 'class': 'road' }, [el('div', { 'class': 'shield', text: c.route }), info]));
+    });
+    rsec.appendChild(ul);
+  } else {
+    rsec.appendChild(el('div', { 'class': 'empty' }, [el('div', null, [
+      el('strong', { text: r.emptyText }), el('div', { text: r.emptyNote })
+    ])]));
+  }
+  var rl = el('div', { 'class': 'links' });
+  (r.links || []).forEach(function (l) { var a = link(l.label, l.url); if (a) rl.appendChild(a); });
+  rsec.appendChild(rl);
+  top.appendChild(rsec);
+
+  // Safety
+  function safetyTips() {
+    var hrs = (data.weather && data.weather.hours) || [], out = [];
+    var A = (data.weather && data.weather.alerts) || [], items = (data.roads && data.roads.items) || [];
+    var fog = hrs.some(function (h) { return h.fog; });
+    var storm = hrs.some(function (h) { return h.storm; });
+    var rainPk = Math.max.apply(null, hrs.map(function (h) { return h.rain || 0; }).concat([0]));
+    var gust = Math.max.apply(null, hrs.map(function (h) { return h.gust || 0; }).concat([0]));
+    var hi = Math.max.apply(null, hrs.map(function (h) { return h.temp; }).concat([-99]));
+    var lo = Math.min.apply(null, hrs.map(function (h) { return h.temp; }).concat([999]));
+    var alertsOn = A.filter(function (a) { return a.level !== 'ok' && !/rip current|beach|surf|small craft|marine|swim|coastal|lake wind/i.test(a.text); });
+    if (alertsOn.length) out.push({ h: 'Active alert: ' + alertsOn.map(function (a) { return a.text; }).join(', '), t: 'Check the National Weather Service details before you roll and follow your dispatcher on whether to run. Do not push a load through a warning.' });
+    if (storm) out.push({ h: 'Lightning: stay out of the raised bed', t: 'A raised bed is the tallest thing on the site. Do not dump or work around the truck while lightning is close. Stay in the cab and wait about 30 minutes after the last thunder.' });
+    if (fog) out.push({ h: 'Fog: slow down and use low beams', t: 'Drive slow enough to stop inside what you can see. High beams reflect back. Leave extra room, since a loaded truck needs much more distance to stop.' });
+    if (rainPk >= 40 || storm) out.push({ h: 'Wet ground: dump on firm, level footing', t: 'Soft or sloped ground can tip a truck once the bed goes up. Walk the dump spot when you can, stay off soft shoulders, and add following distance on wet pavement.' });
+    if (gust >= 25) out.push({ h: 'Gusts to ' + gust + ' mph', t: 'Wind can push a raised bed over. Do not dump in strong gusts, tarp every load, and expect crosswinds on bridges and open stretches.' });
+    if (hi >= 92) out.push({ h: 'Heat: drink water and check tires', t: 'Take water breaks even if you are not thirsty. Check tire pressure and temperature at your pre-trip, and watch for signs of heat stress.' });
+    if (lo <= 36) out.push({ h: 'Cold: watch for ice on bridges', t: 'Bridges and overpasses freeze before the road does. Frozen loads can hang up in the bed and shift when it rises, so stay clear of the tailgate.' });
+    if (items.length) {
+      var ri = items[0];
+      out.push({ h: ri.route + (ri.type === 'crash' ? ' crash' : ' closure') + ' on the route', t: 'Leave early and do not rush to make up time. Slow down and move over for emergency vehicles, and expect stop-and-go traffic near the scene.' });
+    }
+    var sunset = data.weather && data.weather.sunset, m = sunset && /(\d+):(\d+)\s*PM/i.exec(sunset);
+    if (m && (+m[1] < 5 || (+m[1] === 5 && +m[2] < 30)) && out.length < 2) out.push({ h: 'Short daylight: sunset ' + sunset, t: 'You may finish the day in the dark. Clean your lights and mirrors, and watch for deer at dawn and dusk.' });
+    return out.slice(0, 2);
+  }
+  var BANK = [
+    ['Lower the bed before you move', 'Never drive with the bed up, even for a short distance. Check the gauge or light and the mirrors before you pull off.'],
+    ['Look up before you raise the bed', 'Check for power lines and branches overhead every time. Contact with a line can energize the whole truck.'],
+    ['Do a real pre-trip', 'Walk around for tires, lights, brakes, leaks, the tailgate latch and bed pins. A few minutes catches most of what breaks down on the road.'],
+    ['Loaded trucks need more room', 'Increase your following distance and brake early. A loaded dump truck takes far longer to stop than a car.'],
+    ['Do not overload', 'Know your axle and gross limits. Overloaded trucks brake badly, wear tires fast, and tip more easily.'],
+    ['Secure and tarp the load', 'Cover the load and clear the lip of the bed. Loose material and rocks are dangerous to everyone behind you.'],
+    ['Use a spotter or get out and look', 'When backing in a tight site, use a spotter or get out and look. Check the blind spots before every reverse.'],
+    ['Pick the dump spot first', 'Dump on firm, level ground and away from edges, ditches and slopes. Never dump on a soft shoulder.'],
+    ['Use your engine brake on grades', 'Gear down before the hill, not on it. Riding the brakes can overheat them and fade.'],
+    ['Three points of contact', 'Use three points of contact on the steps and cab. Many injuries come from slips getting in and out.'],
+    ['Seat belt every trip', 'Buckle up every time, including short moves on a job site.'],
+    ['Watch your fatigue', 'Early starts and long days wear you down. Take breaks, and do not push through when you are drowsy.'],
+    ['Check your mirrors at intersections', 'Cars slip into your blind spots on the right side. Check both mirrors before every turn and lane change.'],
+    ['Stay clear of the tailgate', 'When the bed goes up, stay out of the dump zone. Wet or sticky loads can come out all at once.']
+  ];
+  function dayIndex() { var s = String(data.dayLabel || ''), h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+  var stips = safetyTips(), sbasis, ssec = el('section', { 'class': 'card', 'aria-label': 'Safety' });
+  if (stips.length) sbasis = el('span', { 'class': 'basis', text: 'Based on today' });
+  else {
+    var pick = BANK[dayIndex() % BANK.length];
+    stips = [{ h: pick[0], t: pick[1] }];
+    sbasis = el('span', { 'class': 'basis rand', text: 'Safety tip of the day' });
+  }
+  ssec.appendChild(el('h2', null, [el('span', { text: 'Safety' }), sbasis]));
+  var slist = el('ul', { 'class': 'tips' });
+  stips.forEach(function (x) { slist.appendChild(el('li', null, [el('div', { 'class': 'th', text: x.h }), el('p', { text: x.t })])); });
+  ssec.appendChild(slist);
+  top.appendChild(ssec);
+
+  // Headlines
+  var nsec = el('section', { 'class': 'card', 'aria-label': 'Headlines' });
+  nsec.appendChild(el('h2', null, [el('span', { text: 'Headlines' })]));
+  var nl = el('ul', { 'class': 'news' });
+  data.news.forEach(function (n) {
+    var inner = [el('h3', { text: n.title }), el('p', { text: n.text }), el('span', { 'class': 'src', text: n.source })];
+    var u = safeUrl(n.url);
+    var content = u ? el('a', { href: u, target: '_blank', rel: 'noopener' }, inner) : el('div', null, inner);
+    nl.appendChild(el('li', null, [content]));
+  });
+  nsec.appendChild(nl);
+  top.appendChild(nsec);
+
+  top.appendChild(el('footer', { text: data.sources }));
+  }
+})();
+</script>
