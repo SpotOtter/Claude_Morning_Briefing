@@ -1,6 +1,6 @@
 {
  "dayLabel": "Thursday, Nov 5",
- "place": "Mossy Head \u00b7 Walton County, FL",
+ "place": "Mossy Head · Walton County, FL",
  "updated": "6:34 PM CT",
  "verdict": {
   "level": "watch",
@@ -156,12 +156,12 @@
    },
    {
     "k": "Wind",
-    "v": "0\u20135 mph",
+    "v": "0–5 mph",
     "note": "Gusts to 10 mph"
    },
    {
     "k": "Heat index",
-    "v": "Under 100\u00b0F",
+    "v": "Under 100°F",
     "note": "No heat concern"
    },
    {
@@ -191,10 +191,6 @@
    {
     "label": "FL511 map",
     "url": "https://fl511.com"
-   },
-   {
-    "label": "FDOT District 3",
-    "url": "https://www.fdot.gov/nwflroads"
    },
    {
     "label": "Alabama 511",

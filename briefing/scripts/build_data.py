@@ -147,7 +147,7 @@ for r in con:
     items.append({"type": "closure", "route": r["roadwayName"], "when": "Planned", "where": f'{r["county"]} County', "detail": d, "detour": "", "lat": r["lat"], "lon": r["lon"], "url": "https://fl511.com"})
 roads = {"sample": False, "items": items, "emptyText": "No major closures or crashes found.",
   "emptyNote": "FL511 shows no full closures or crashes in the Panhandle right now. Alabama roads are not checked here, so look at the Alabama 511 link.",
-  "links": [{"label": "FL511 map", "url": "https://fl511.com"}, {"label": "FDOT District 3", "url": "https://www.fdot.gov/nwflroads"}, {"label": "Alabama 511", "url": "https://algotraffic.com"}]}
+  "links": [{"label": "FL511 map", "url": "https://fl511.com"}, {"label": "Alabama 511", "url": "https://algotraffic.com"}]}
 
 # ---- news
 def news():
