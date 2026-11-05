@@ -175,7 +175,7 @@ h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform:
 
 .sample-tag { display: inline-block; font: 600 12px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; background: var(--warn-bg); color: var(--warn); padding: 5px 8px; border-radius: 4px; }
 
-.radar img { display: block; width: 100%; height: auto; border-radius: 6px; background: #000; }
+.radar > img { display: block; width: 100%; height: auto; border-radius: 6px; background: #000; }
 .radarmap { height: 380px; }
 @media (max-width: 600px) { .radarmap { height: 320px; } }
 .radarbar { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 13px; color: var(--muted, #666); flex-wrap: wrap; }
@@ -394,7 +394,6 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     document.addEventListener('briefing-theme', function () {
       sync();
       if (window.__briefingRedrawMap) window.__briefingRedrawMap();
-      if (window.__briefingRedrawRadar) window.__briefingRedrawRadar();
     });
     sync();
   })();
@@ -512,7 +511,6 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     window.__briefingMapReady = function () {
       var g = google.maps;
       Promise.all([g.importLibrary('maps'), g.importLibrary('marker')]).then(function (libs) {
-        if (window.__briefingRadarInit) { try { window.__briefingRadarInit(libs[0].Map); } catch (e) { /* keep the NWS image */ } }
         // The map's color scheme can only be set when it is created, so a theme
         // switch redraws it (pin colors follow the page theme too).
         function draw() {
@@ -656,48 +654,27 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   var rcap = el('p', { 'class': 'cap', text: 'NWS Eglin AFB radar loop. Not live: reload the page for newer frames.' });
   radarSec.appendChild(rcap);
   top.appendChild(radarSec);
-  // Radar on a Google map (follows the light/dark toggle): Eglin AFB (KEVX) base reflectivity
-  // tiles from Iowa State Mesonet, the latest scans about five minutes apart. The faint
-  // blue-gray "clear air" returns are dropped so only precipitation shows. If the map or the
-  // tiles fail, the NWS image stays.
-  window.__briefingRadarInit = function (MapCls) {
-    var g = google.maps, HOME = { lat: 30.77, lng: -86.31 }, MAXF = 10;
-    var BASE = 'https://mesonet.agron.iastate.edu/';
-    var frames = [], map, layers = [], label, playBtn, timer = null, cur = 0, playing = true, ready = false;
+  // Radar: RainViewer frames drawn on a Leaflet map with Esri dark/light gray base tiles.
+  // No API keys. If Leaflet, the tiles or the frame list fail to load,
+  // the NWS radar image stays.
+  (function () {
+    var HOME = [30.77, -86.31], RV = 'https://api.rainviewer.com/public/weather-maps.json';
+    var L, map, base, frames = [], layers = [], label, playBtn, timer = null, cur = 0, playing = true;
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function Layer(ts) {
-      this.tileSize = new g.Size(256, 256); this.name = 'Radar'; this.minZoom = 5; this.maxZoom = 10;
-      this.ts = ts; this.op = 0; this.tiles = [];
+    function isDark() { return !!(window.briefingTheme && window.briefingTheme.isDark()); }
+    // Esri gray canvas base maps (light and dark, no key). The labels sit above the radar.
+    function baseLayer() {
+      var k = isDark() ? 'Dark' : 'Light', u = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_' + k + '_Gray_';
+      return L.layerGroup([
+        L.tileLayer(u + 'Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, attribution: 'Tiles &copy; Esri, HERE, Garmin, OpenStreetMap contributors' }),
+        L.tileLayer(u + 'Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, pane: 'labels' })
+      ]);
     }
-    Layer.prototype.getTile = function (c, z, doc) {
-      var cv = doc.createElement('canvas'); cv.width = 256; cv.height = 256;
-      cv.style.opacity = this.op; this.tiles.push(cv);
-      var n = 1 << z; if (z < 5 || z > 10 || c.y < 0 || c.y >= n) return cv;
-      var x = ((c.x % n) + n) % n, im = new Image(); im.crossOrigin = 'anonymous';
-      im.onload = function () {
-        try {
-          var ctx = cv.getContext('2d'); ctx.drawImage(im, 0, 0);
-          var d = ctx.getImageData(0, 0, 256, 256), a = d.data;
-          for (var i = 0; i < a.length; i += 4) {
-            if (!a[i + 3]) continue;
-            var r = a[i], gg = a[i + 1], b = a[i + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
-            if ((b >= gg && r >= 60) || (mx - mn < 50)) a[i + 3] = 0;   // clear air and gray
-          }
-          ctx.putImageData(d, 0, 0);
-        } catch (e) { /* leave the tile blank */ }
-      };
-      im.src = BASE + 'cache/tile.py/1.0.0/ridge::EVX-N0B-' + this.ts + '/' + z + '/' + x + '/' + c.y + '.png';
-      return cv;
-    };
-    Layer.prototype.releaseTile = function (t) { var i = this.tiles.indexOf(t); if (i >= 0) this.tiles.splice(i, 1); };
-    Layer.prototype.setOpacity = function (v) { this.op = v; this.tiles.forEach(function (t) { t.style.opacity = v; }); };
-    function stamp(s) { return s.replace(/[-:T]/g, '').replace('Z', '').slice(0, 12); }
     function show(i) {
       cur = i;
       layers.forEach(function (l, j) { l.setOpacity(j === i ? 0.85 : 0); });
-      var mins = Math.round((Date.now() - frames[i].t) / 60000);
-      var last = i === frames.length - 1;
-      label.textContent = last ? 'Latest' : mins + ' min ago';
+      var mins = Math.round((Date.now() / 1000 - frames[i].time) / 60);
+      label.textContent = i === frames.length - 1 ? 'Latest' : mins + ' min ago';
     }
     function tick() {
       if (!playing) return;
@@ -709,42 +686,48 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
       playBtn.textContent = p ? 'Pause' : 'Play';
       if (p) timer = setTimeout(tick, 450); else show(frames.length - 1);
     }
-    function build() {
-      clearTimeout(timer);
-      var dark = !!(window.briefingTheme && window.briefingTheme.isDark());
-      var mapEl = el('div', { 'class': 'gmap radarmap', role: 'region', 'aria-label': 'Animated weather radar map from the Eglin AFB radar' });
-      var opts = { center: HOME, zoom: 7, mapId: 'DEMO_MAP_ID', mapTypeControl: false, streetViewControl: false,
-        fullscreenControl: true, gestureHandling: 'cooperative' };
-      if (g.ColorScheme) opts.colorScheme = dark ? g.ColorScheme.DARK : g.ColorScheme.LIGHT;
-      map = new MapCls(mapEl, opts);
-      layers = frames.map(function (f) { var l = new Layer(f.id); map.overlayMapTypes.push(l); return l; });
+    function build(host, path) {
+      var mapEl = el('div', { 'class': 'gmap radarmap', role: 'region', 'aria-label': 'Animated weather radar map for the Florida Panhandle' });
       label = el('span', { 'class': 'radarlabel', text: 'Latest' });
       playBtn = el('button', { type: 'button', 'class': 'radarbtn', text: 'Pause' });
       playBtn.addEventListener('click', function () { setPlaying(!playing); });
       var bar = el('div', { 'class': 'radarbar' }, [playBtn, label,
         el('span', { 'class': 'radarkey' }, [document.createTextNode('Light'), el('i', { 'class': 'radargrad' }), document.createTextNode('Heavy')])]);
-      radarSec.querySelectorAll('.radarwrap').forEach(function (x) { x.remove(); });
       radarSec.insertBefore(el('div', { 'class': 'radarwrap' }, [mapEl, bar]), rimg);
+      map = L.map(mapEl, { center: HOME, zoom: 7, minZoom: 5, maxZoom: 9, scrollWheelZoom: false, attributionControl: true });
+      map.attributionControl.addAttribution('Radar &copy; <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>');
+      map.createPane('labels').style.zIndex = 450; map.getPane('labels').style.pointerEvents = 'none';
+      base = baseLayer().addTo(map);
+      L.circleMarker(HOME, { radius: 6, color: '#23272D', weight: 2, fillColor: '#F2B705', fillOpacity: 1 }).addTo(map).bindTooltip('Mossy Head');
+      layers = frames.map(function (f) {
+        // Free RainViewer radar tiles exist up to zoom 7; deeper zooms scale them up.
+        return L.tileLayer(host + f.path + '/256/{z}/{x}/{y}/6/1_1.png', { opacity: 0, maxNativeZoom: 7, maxZoom: 9, zIndex: 5 }).addTo(map);
+      });
       rimg.style.display = 'none';
       radarSec.removeAttribute('hidden');
-      var span = Math.round((frames[frames.length - 1].t - frames[0].t) / 60000);
-      rcap.textContent = 'NWS Eglin AFB (KEVX) radar via Iowa State Mesonet, last ' + span + ' minutes. Faint clear-air returns are hidden. Not live: reload the page for newer frames.';
+      var span = Math.round((frames[frames.length - 1].time - frames[0].time) / 60);
+      rcap.textContent = 'Radar from RainViewer on an Esri base map, last ' + span + ' minutes. Not live: reload the page for newer frames.';
       show(frames.length - 1);
       playing = !reduce; playBtn.textContent = playing ? 'Pause' : 'Play';
       if (playing) timer = setTimeout(tick, 600);
+      document.addEventListener('briefing-theme', function () {
+        if (base) { map.removeLayer(base); base = baseLayer().addTo(map); }
+      });
     }
-    var end = new Date(), start = new Date(end.getTime() - 75 * 60000);
-    function iso(d) { return d.toISOString().slice(0, 16) + 'Z'; }
-    fetch(BASE + 'json/radar.py?operation=list&radar=EVX&product=N0B&start=' + iso(start) + '&end=' + iso(end))
-      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
-      .then(function (j) {
-        var sc = (j.scans || []).slice(-MAXF);
-        if (sc.length < 3) throw 0;
-        frames = sc.map(function (s) { return { id: stamp(s.ts), t: new Date(s.ts).getTime() }; });
-        build();
-        window.__briefingRedrawRadar = build;
+    var css = document.createElement('link'); css.rel = 'stylesheet';
+    css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+    var js = document.createElement('script');
+    js.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    js.onload = function () {
+      L = window.L;
+      fetch(RV).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+        frames = ((j.radar && j.radar.past) || []).slice(-12);
+        if (frames.length < 3 || !L) throw 0;
+        build(j.host || 'https://tilecache.rainviewer.com', null);
       }).catch(function () { /* keep the NWS image */ });
-  };
+    };
+    document.head.appendChild(js);
+  })();
   // The radar file is refreshed on its own schedule, so show when it was fetched.
   fetch('radar.gif', { method: 'HEAD', cache: 'no-store' }).then(function (res) {
     var lm = res.headers.get('last-modified'), d = lm ? new Date(lm) : null;
