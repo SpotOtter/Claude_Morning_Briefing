@@ -14,10 +14,9 @@ def tryf(f, d):
     except Exception as e: print("WARN", e, file=sys.stderr); return d
 
 now = dt.datetime.now(CT)
-# Show the rest of today until 6 PM, then switch to tomorrow's full day.
-is_today = now.hour < 18
-day = now.date() if is_today else now.date() + dt.timedelta(days=1)
-first_h = max(5, now.hour) if is_today else 5   # skip hours that have already passed
+day = now.date()
+start = now.replace(minute=0, second=0, microsecond=0)   # the current hour
+WINDOW = 12   # hours the page shows, starting from the hour it is opened
 
 # ---- weather
 pt = J(f"https://api.weather.gov/points/{LAT},{LON}")["properties"]
@@ -34,23 +33,26 @@ def gridvals(name):
     return out
 gust = gridvals("windGust"); qpf = gridvals("quantitativePrecipitation"); hid = gridvals("heatIndex")
 mph = lambda kmh: round(kmh * 0.621371) if kmh is not None else None
+# Publish the next 36 hours with real timestamps. The page picks the 12 hours that
+# start at the hour it is opened; the verdict and facts below cover the next 12 hours.
 hours = []
 for p in per:
     t = dt.datetime.fromisoformat(p["startTime"]).astimezone(CT)
-    if t.date() != day or not (first_h <= t.hour <= 18): continue
+    if t < start: continue
+    if len(hours) >= 36: break
     sf = p["shortForecast"].lower()
     w = int(re.findall(r"\d+", p["windSpeed"])[-1])
     g = mph(gust.get(t)) or w
-    hours.append({"h": f"{(t.hour-1)%12+1}{'a' if t.hour<12 else 'p'}", "temp": p["temperature"],
+    hours.append({"ts": int(t.timestamp() * 1000), "h": f"{(t.hour-1)%12+1}{'a' if t.hour<12 else 'p'}", "temp": p["temperature"],
         "rain": (p["probabilityOfPrecipitation"] or {}).get("value") or 0, "wind": w, "gust": max(g, w),
-        "fog": "fog" in sf or "haze" in sf and False, "storm": "thunder" in sf})
-allday = [p for p in per if dt.datetime.fromisoformat(p["startTime"]).astimezone(CT).date() == day]
-temps = [p["temperature"] for p in allday] or [h["temp"] for h in hours]
+        "fog": "fog" in sf or "haze" in sf and False, "storm": "thunder" in sf, "sky": p["shortForecast"]})
+win = hours[:WINDOW]
+temps = [h["temp"] for h in win]
 high, low = max(temps), min(temps)
-midday = [p["shortForecast"] for p in allday if 9 <= dt.datetime.fromisoformat(p["startTime"]).astimezone(CT).hour <= 15]
-sky = (max(set(midday), key=midday.count) if midday else "See hourly") 
-rain_tot = sum(v for t, v in qpf.items() if t.date() == day and first_h <= t.hour <= 18 and v) / 25.4
-rain_pk = max([h["rain"] for h in hours] or [0])
+skies = [h["sky"] for h in win]
+sky = (max(set(skies), key=skies.count) if skies else "See hourly")
+rain_tot = sum(v for t, v in qpf.items() if start <= t < start + dt.timedelta(hours=WINDOW) and v) / 25.4
+rain_pk = max([h["rain"] for h in win] or [0])
 # sunrise/sunset (NOAA approx)
 def sun(date, lat, lon, rise):
     n = date.timetuple().tm_yday
@@ -84,9 +86,9 @@ mine = [a for a in al if any(z.split("/")[-1] in zones for z in a["properties"][
 for a in mine:
     p = a["properties"]; alerts.append({"level": "b" if p["severity"] in ("Severe", "Extreme") else "w", "text": p["event"]})
 if not alerts: alerts = [{"level": "ok", "text": "No NWS watches or warnings for Walton, Okaloosa, Holmes, Washington or Santa Rosa"}]
-storm_h = [h["h"] for h in hours if h["storm"]]
-fog_h = [h for h in hours if h["fog"]]
-mxg = max([h["gust"] for h in hours] or [0]); mnw = min([h["wind"] for h in hours] or [0]); mxw = max([h["wind"] for h in hours] or [0])
+storm_h = [h["h"] for h in win if h["storm"]]
+fog_h = [h for h in win if h["fog"]]
+mxg = max([h["gust"] for h in win] or [0]); mnw = min([h["wind"] for h in win] or [0]); mxw = max([h["wind"] for h in win] or [0])
 if storm_h: lvl, lab, title = "watch", "Watch", f"Thunderstorms possible {storm_h[0]} to {storm_h[-1]}"
 elif fog_h: lvl, lab, title = "watch", "Watch", "Fog early, drive slow"
 elif rain_pk >= 50: lvl, lab, title = "watch", "Watch", f"Rain likely, up to {rain_pk}% chance"
@@ -100,7 +102,7 @@ if mxg >= 25: tips.append(f"Gusts to {mxg} mph. Secure tarps and watch crosswind
 if not tips: tips.append("Dry and workable. Good day to get loads moved.")
 weather = {"sky": sky, "high": high, "low": low, "sunrise": sr, "sunset": ss, "sampleHours": False, "hours": hours,
   "facts": [
-    {"k": "Rain today" if is_today else "Rain tomorrow", "v": f'{rain_tot:.2f}"' if rain_tot >= 0.01 else "Little to none", "note": f"Peak chance {rain_pk}%"},
+    {"k": "Rain, next 12 hrs", "v": f'{rain_tot:.2f}"' if rain_tot >= 0.01 else "Little to none", "note": f"Peak chance {rain_pk}%"},
     {"k": "Last 48 hours", "v": (f'{r48:.2f}"' if r48 is not None else None), "note": (f"Station {st}" if st else "Not available this run")},
     {"k": "Wind", "v": f"{mnw}–{mxw} mph", "note": f"Gusts to {mxg} mph"},
     {"k": "Heat index", "v": "Under 100°F" if high < 100 else f"Up to {high}°F", "note": "No heat concern" if high < 100 else "Heat risk, drink water"},

@@ -480,6 +480,20 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   var top = el('div', { 'class': 'wrap', style: 'padding-top:20px' });
   app.appendChild(top);
 
+  // Hourly: show the 12 hours that start at the hour the page is opened.
+  // (Sample data without timestamps is shown as-is.)
+  (function () {
+    var wx = data.weather, all = (wx && wx.hours) || [];
+    if (!all.length || typeof all[0].ts !== 'number') return;
+    var cur = Math.floor(Date.now() / 3600000) * 3600000;
+    var win = all.filter(function (x) { return x.ts >= cur; }).slice(0, 12);
+    if (!win.length) return;
+    wx.hours = win;
+    wx.high = Math.max.apply(null, win.map(function (x) { return x.temp; }));
+    wx.low = Math.min.apply(null, win.map(function (x) { return x.temp; }));
+    wx.rollingWindow = true;
+  })();
+
   // Verdict
   var v = data.verdict;
   top.appendChild(el('section', { 'class': 'card verdict v-' + v.level, 'aria-label': 'Work impact' }, [
@@ -501,7 +515,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     hi,
     el('div', { 'class': 'lohi' }, [
       el('span', null, [document.createTextNode('Low '), el('strong', { text: w.low + '°' })]),
-      el('span', { text: 'Daytime high' })
+      el('span', { text: w.rollingWindow ? 'High, next 12 hours' : 'Daytime high' })
     ]),
     el('div', { 'class': 'sky', text: w.sky })
   ]));
@@ -647,7 +661,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   ];
   function dayIndex() { var s = String(data.dayLabel || ''), h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
   var stips = safetyTips(), sbasis, ssec = el('section', { 'class': 'card', 'aria-label': 'Safety' });
-  if (stips.length) sbasis = el('span', { 'class': 'basis', text: 'Based on today' });
+  if (stips.length) sbasis = el('span', { 'class': 'basis', text: (data.weather && data.weather.rollingWindow) ? 'Based on the next 12 hours' : 'Based on today' });
   else {
     var pick = BANK[dayIndex() % BANK.length];
     stips = [{ h: pick[0], t: pick[1] }];
