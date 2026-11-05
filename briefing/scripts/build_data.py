@@ -14,7 +14,10 @@ def tryf(f, d):
     except Exception as e: print("WARN", e, file=sys.stderr); return d
 
 now = dt.datetime.now(CT)
-day = now.date() if now.hour < 12 else now.date() + dt.timedelta(days=1)
+# Show the rest of today until 6 PM, then switch to tomorrow's full day.
+is_today = now.hour < 18
+day = now.date() if is_today else now.date() + dt.timedelta(days=1)
+first_h = max(5, now.hour) if is_today else 5   # skip hours that have already passed
 
 # ---- weather
 pt = J(f"https://api.weather.gov/points/{LAT},{LON}")["properties"]
@@ -34,7 +37,7 @@ mph = lambda kmh: round(kmh * 0.621371) if kmh is not None else None
 hours = []
 for p in per:
     t = dt.datetime.fromisoformat(p["startTime"]).astimezone(CT)
-    if t.date() != day or not (5 <= t.hour <= 18): continue
+    if t.date() != day or not (first_h <= t.hour <= 18): continue
     sf = p["shortForecast"].lower()
     w = int(re.findall(r"\d+", p["windSpeed"])[-1])
     g = mph(gust.get(t)) or w
@@ -46,7 +49,7 @@ temps = [p["temperature"] for p in allday] or [h["temp"] for h in hours]
 high, low = max(temps), min(temps)
 midday = [p["shortForecast"] for p in allday if 9 <= dt.datetime.fromisoformat(p["startTime"]).astimezone(CT).hour <= 15]
 sky = (max(set(midday), key=midday.count) if midday else "See hourly") 
-rain_tot = sum(v for t, v in qpf.items() if t.date() == day and 5 <= t.hour <= 18 and v) / 25.4
+rain_tot = sum(v for t, v in qpf.items() if t.date() == day and first_h <= t.hour <= 18 and v) / 25.4
 rain_pk = max([h["rain"] for h in hours] or [0])
 # sunrise/sunset (NOAA approx)
 def sun(date, lat, lon, rise):
@@ -97,7 +100,7 @@ if mxg >= 25: tips.append(f"Gusts to {mxg} mph. Secure tarps and watch crosswind
 if not tips: tips.append("Dry and workable. Good day to get loads moved.")
 weather = {"sky": sky, "high": high, "low": low, "sunrise": sr, "sunset": ss, "sampleHours": False, "hours": hours,
   "facts": [
-    {"k": "Rain today", "v": f'{rain_tot:.2f}"' if rain_tot >= 0.01 else "Little to none", "note": f"Peak chance {rain_pk}%"},
+    {"k": "Rain today" if is_today else "Rain tomorrow", "v": f'{rain_tot:.2f}"' if rain_tot >= 0.01 else "Little to none", "note": f"Peak chance {rain_pk}%"},
     {"k": "Last 48 hours", "v": (f'{r48:.2f}"' if r48 is not None else None), "note": (f"Station {st}" if st else "Not available this run")},
     {"k": "Wind", "v": f"{mnw}–{mxw} mph", "note": f"Gusts to {mxg} mph"},
     {"k": "Heat index", "v": "Under 100°F" if high < 100 else f"Up to {high}°F", "note": "No heat concern" if high < 100 else "Heat risk, drink water"},
