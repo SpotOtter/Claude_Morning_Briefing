@@ -176,6 +176,9 @@ h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform:
 /* Map */
 .mapbox { overflow-x: auto; margin: 0 -16px 10px; padding: 0 16px 4px; -webkit-overflow-scrolling: touch; }
 .map { display: block; width: 100%; min-width: 600px; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+.gmapbox { overflow: visible; }
+.gmap { width: 100%; height: 420px; border-radius: 8px; border: 1px solid var(--line); overflow: hidden; }
+@media (max-width: 600px) { .gmap { height: 340px; } }
 .m-land { fill: var(--bg); }
 .m-water { fill: var(--rain-soft); }
 .m-state { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 7 6; fill: none; }
@@ -310,9 +313,10 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
 }
 </script>
 
+<script src="config.js" onerror="window.BRIEFING_CONFIG = window.BRIEFING_CONFIG || {}"></script>
 <script>
 (function () {
-  var inline = JSON.parse(document.getElementById('briefing-data').textContent);
+  var inline =JSON.parse(document.getElementById('briefing-data').textContent);
   fetch('data.json', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
     .catch(function () { return inline; }).then(function (data) { render(data); });
   function render(data) {
@@ -425,6 +429,48 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     svg.appendChild(svgEl('text', { x: 748, y: 530, 'text-anchor': 'end', 'class': 'm-note', text: 'Schematic map, not to scale' }));
     return svg;
   }
+  // Google map with live traffic. Replaces the schematic map once it loads;
+  // if the key is missing, wrong, or blocked, the schematic map stays.
+  function loadGoogleMap(key, box, items) {
+    var HOME = { lat: 30.77, lng: -86.31 };
+    window.gm_authFailure = function () { /* keep the schematic map */ };
+    window.__briefingMapReady = function () {
+      var g = google.maps;
+      Promise.all([g.importLibrary('maps'), g.importLibrary('marker')]).then(function (libs) {
+        var css = getComputedStyle(document.documentElement);
+        function col(v, d) { return (css.getPropertyValue(v) || '').trim() || d; }
+        var holder = el('div', { 'class': 'gmap', role: 'region', 'aria-label': 'Google map with live traffic and marked closures and crashes' });
+        var map = new libs[0].Map(holder, {
+          center: HOME, zoom: 9, mapId: 'DEMO_MAP_ID',
+          mapTypeControl: false, streetViewControl: false, fullscreenControl: true, gestureHandling: 'cooperative'
+        });
+        new g.TrafficLayer().setMap(map);
+        var M = libs[1];
+        new M.AdvancedMarkerElement({ map: map, position: HOME, title: 'Mossy Head',
+          content: new M.PinElement({ background: col('--mark', '#F2B705'), borderColor: col('--road', '#23272D'), glyphColor: col('--road', '#23272D') }).element });
+        var bounds = new g.LatLngBounds(HOME);
+        items.forEach(function (c, i) {
+          if (typeof c.lat !== 'number' || typeof c.lon !== 'number') return;
+          var crash = c.type === 'crash';
+          var pos = { lat: c.lat, lng: c.lon };
+          bounds.extend(pos);
+          new M.AdvancedMarkerElement({ map: map, position: pos, title: (crash ? 'Crash: ' : 'Closure: ') + (c.route || '') + ' ' + (c.where || ''),
+            content: new M.PinElement({ glyph: String(i + 1), glyphColor: '#fff',
+              background: crash ? col('--warn', '#C2410C') : col('--bad', '#B91C1C'), borderColor: '#fff' }).element });
+        });
+        if (items.length) map.fitBounds(bounds, 48);
+        box.className = 'mapbox gmapbox';
+        box.removeAttribute('tabindex');
+        box.textContent = '';
+        box.appendChild(holder);
+      }).catch(function () { /* keep the schematic map */ });
+    };
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) +
+      '&loading=async&v=weekly&callback=__briefingMapReady';
+    document.head.appendChild(s);
+  }
   function link(label, url, cls) {
     var u = safeUrl(url);
     return u ? el('a', { 'class': cls || 'btn', href: u, target: '_blank', rel: 'noopener', text: label }) : null;
@@ -516,7 +562,10 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   if (r.sample) rh2.appendChild(el('span', { 'class': 'sample-tag', text: 'Example incidents' }));
   else rh2.appendChild(el('small', { text: 'Within 100 miles' }));
   rsec.appendChild(rh2);
-  rsec.appendChild(el('div', { 'class': 'mapbox', tabindex: '0' }, [buildMap(r.items)]));
+  var mapbox = el('div', { 'class': 'mapbox', tabindex: '0' }, [buildMap(r.items)]);
+  rsec.appendChild(mapbox);
+  var mapsKey = (window.BRIEFING_CONFIG && window.BRIEFING_CONFIG.mapsKey) || '';
+  if (/^[A-Za-z0-9_-]{20,}$/.test(mapsKey)) loadGoogleMap(mapsKey, mapbox, r.items || []);
   rsec.appendChild(el('div', { 'class': 'maplegend' }, [
     el('span', null, [el('i', { 'class': 'lg-dot closure' }), document.createTextNode('Closure')]),
     el('span', null, [el('i', { 'class': 'lg-dot crash' }), document.createTextNode('Major crash')]),
