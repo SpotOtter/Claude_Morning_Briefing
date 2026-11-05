@@ -176,6 +176,13 @@ h2 small { font: 500 13px/1 var(--font-body); letter-spacing: 0; text-transform:
 .sample-tag { display: inline-block; font: 600 12px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; background: var(--warn-bg); color: var(--warn); padding: 5px 8px; border-radius: 4px; }
 
 .radar img { display: block; width: 100%; height: auto; border-radius: 6px; background: #000; }
+.radarmap { height: 380px; }
+@media (max-width: 600px) { .radarmap { height: 320px; } }
+.radarbar { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 13px; color: var(--muted, #666); flex-wrap: wrap; }
+.radarbtn { min-height: 44px; min-width: 64px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.radarlabel { min-width: 64px; }
+.radarkey { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.radargrad { width: 80px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #5fd35f, #1f9d1f, #f2e04a, #f29a2e, #d62d2d, #b0208f); }
 .radar .cap { margin-top: 8px; font-size: 13px; color: var(--muted, #666); }
 .scroller { overflow-x: auto; margin: 0 -16px; padding: 0 16px 6px; -webkit-overflow-scrolling: touch; }
 .hours { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(46px, 1fr); gap: 0; min-width: 100%; width: max-content; }
@@ -387,6 +394,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     document.addEventListener('briefing-theme', function () {
       sync();
       if (window.__briefingRedrawMap) window.__briefingRedrawMap();
+      if (window.__briefingRedrawRadar) window.__briefingRedrawRadar();
     });
     sync();
   })();
@@ -504,6 +512,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     window.__briefingMapReady = function () {
       var g = google.maps;
       Promise.all([g.importLibrary('maps'), g.importLibrary('marker')]).then(function (libs) {
+        if (window.__briefingRadarInit) { try { window.__briefingRadarInit(libs[0].Map); } catch (e) { /* keep the NWS image */ } }
         // The map's color scheme can only be set when it is created, so a theme
         // switch redraws it (pin colors follow the page theme too).
         function draw() {
@@ -647,6 +656,72 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   var rcap = el('p', { 'class': 'cap', text: 'NWS Eglin AFB radar loop. Not live: reload the page for newer frames.' });
   radarSec.appendChild(rcap);
   top.appendChild(radarSec);
+  // Radar on a Google map (follows the light/dark toggle): NEXRAD tiles from Iowa State
+  // Mesonet, 11 frames five minutes apart. If the map or the tiles fail, the NWS image stays.
+  window.__briefingRadarInit = function (MapCls) {
+    var g = google.maps, HOME = { lat: 30.77, lng: -86.31 }, STEPS = 11;
+    var tileUrl = function (k, z, x, y) {
+      return 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913' +
+        (k ? '-m' + (k < 2 ? '0' : '') + (k * 5) + 'm' : '') + '/' + z + '/' + x + '/' + y + '.png';
+    };
+    var n = Math.pow(2, 7), la = HOME.lat * Math.PI / 180;
+    var tx = Math.floor((HOME.lng + 180) / 360 * n);
+    var ty = Math.floor((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2 * n);
+    var probe = new Image();
+    probe.onerror = function () { /* tiles unreachable: keep the NWS image */ };
+    probe.onload = function () { start(); };
+    probe.src = tileUrl(0, 7, tx, ty);
+    var holder, label, playBtn, map, layers, timer = null, cur = STEPS - 1, playing = true;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function show(i) {
+      cur = i;
+      layers.forEach(function (l, j) { l.setOpacity(j === i ? 0.8 : 0); });
+      var ago = (STEPS - 1 - i) * 5;
+      label.textContent = ago ? ago + ' min ago' : 'Latest';
+    }
+    function tick() {
+      if (!playing) return;
+      var last = cur === STEPS - 1;
+      show(last ? 0 : cur + 1);
+      timer = setTimeout(tick, cur === STEPS - 1 ? 1800 : 450);
+    }
+    function setPlaying(p) {
+      playing = p; clearTimeout(timer);
+      playBtn.textContent = p ? 'Pause' : 'Play';
+      if (p) timer = setTimeout(tick, 450); else show(STEPS - 1);
+    }
+    function build() {
+      clearTimeout(timer);
+      var dark = !!(window.briefingTheme && window.briefingTheme.isDark());
+      var mapEl = el('div', { 'class': 'gmap radarmap', role: 'region', 'aria-label': 'Animated weather radar map for the Florida Panhandle' });
+      var opts = { center: HOME, zoom: 7, mapId: 'DEMO_MAP_ID', mapTypeControl: false, streetViewControl: false,
+        fullscreenControl: true, gestureHandling: 'cooperative' };
+      if (g.ColorScheme) opts.colorScheme = dark ? g.ColorScheme.DARK : g.ColorScheme.LIGHT;
+      map = new MapCls(mapEl, opts);
+      layers = [];
+      for (var i = 0; i < STEPS; i++) {
+        (function (k) {
+          var t = new g.ImageMapType({ tileSize: new g.Size(256, 256), opacity: 0,
+            getTileUrl: function (c, z) { return (z < 3 || z > 10) ? null : tileUrl(k, z, ((c.x % (1 << z)) + (1 << z)) % (1 << z), c.y); } });
+          map.overlayMapTypes.push(t); layers.push(t);
+        })(STEPS - 1 - i);
+      }
+      label = el('span', { 'class': 'radarlabel', text: 'Latest' });
+      playBtn = el('button', { type: 'button', 'class': 'radarbtn', text: 'Pause' });
+      playBtn.addEventListener('click', function () { setPlaying(!playing); });
+      var bar = el('div', { 'class': 'radarbar' }, [playBtn, label,
+        el('span', { 'class': 'radarkey' }, [document.createTextNode('Light'), el('i', { 'class': 'radargrad' }), document.createTextNode('Heavy')])]);
+      radarSec.querySelectorAll('.radarwrap').forEach(function (x) { x.remove(); });
+      radarSec.insertBefore(el('div', { 'class': 'radarwrap' }, [mapEl, bar]), rimg);
+      rimg.style.display = 'none';
+      radarSec.removeAttribute('hidden');
+      rcap.textContent = 'NWS NEXRAD radar via Iowa State Mesonet, last 50 minutes. Not live: reload the page for newer frames.';
+      show(STEPS - 1);
+      playing = !reduce; playBtn.textContent = playing ? 'Pause' : 'Play';
+      if (playing) timer = setTimeout(tick, 600);
+    }
+    function start() { build(); window.__briefingRedrawRadar = build; }
+  };
   // The radar file is refreshed on its own schedule, so show when it was fetched.
   fetch('radar.gif', { method: 'HEAD', cache: 'no-store' }).then(function (res) {
     var lm = res.headers.get('last-modified'), d = lm ? new Date(lm) : null;
