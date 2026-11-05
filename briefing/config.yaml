@@ -1,0 +1,22 @@
+name: "Mossy Head Briefing"
+version: "0.1.0"
+slug: "briefing"
+description: "Serves the daily briefing page and refreshes its weather, road and radar data each weekday morning."
+url: "https://github.com/SpotOtter/Claude_Morning_Briefing"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+init: false
+startup: application
+boot: auto
+ports:
+  80/tcp: 8099
+ports_description:
+  80/tcp: "Briefing web page"
+options:
+  maps_key: ""
+  timezone: "America/Chicago"
+schema:
+  maps_key: "password?"
+  timezone: "str"

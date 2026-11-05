@@ -1,11 +1,26 @@
 # Claude_Morning_Briefing
 
-Daily briefing for dump-truck drivers in the Florida Panhandle (Mossy Head / DeFuniak Springs area).
+Daily briefing page for dump-truck drivers in the Florida Panhandle (Mossy Head / DeFuniak Springs area).
 
-- `scripts/build_data.py <out.json>` builds `data.json` (NWS weather and alerts, FL511 closures and crashes, non-political headlines).
-- `scripts/fetch_radar.py <out.gif>` downloads the NWS Eglin AFB radar loop.
-- `web/index.html` is the page; it reads `data.json` and `radar.gif` beside it.
+## Layout
 
-Scheduled tasks (weekdays, Central): 4:30 AM page data, 4:38 AM radar, 4:45 AM Telegram message.
+- `briefing/` is a Home Assistant local add-on. It serves the page and refreshes the data itself.
+  - `scripts/build_data.py <out.json>` builds `data.json` (NWS weather and alerts, FL511 closures and crashes, non-political headlines).
+  - `scripts/fetch_radar.py <out.gif>` downloads the NWS Eglin AFB radar loop.
+  - `web/index.html` is the page. It reads `data.json` and `radar.gif` beside it.
+  - `build.sh`, `run.sh`, `Dockerfile`, `config.yaml` make up the add-on.
 
-No emails, tokens or other secrets belong in this repo. Email content is only used in the private Telegram message, never on the page.
+The add-on refreshes `data.json` at 4:30 AM and `radar.gif` at 4:40 AM Central on weekdays, and once whenever it starts.
+
+## Install on Home Assistant OS
+
+1. Install the **Samba share** or **Advanced SSH & Web Terminal** add-on so you can reach the `/addons` folder.
+2. Copy the `briefing` folder into `/addons/` (it ends up as `/addons/briefing/config.yaml`).
+3. Settings → Add-ons → Add-on Store → ⋮ → Check for updates. A "Local add-ons" section appears with **Mossy Head Briefing**.
+4. Install, then Start. Open `http://<mini-pc-address>:8099`.
+
+To update later, replace the folder's files and use Rebuild on the add-on page.
+
+## Security
+
+No emails, tokens or other secrets belong in this repo. Email content is only used in the private Telegram message, never on the page. The Telegram briefing is a separate project and shares nothing with this one.
