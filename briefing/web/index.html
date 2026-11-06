@@ -529,7 +529,8 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
           });
           if (items.length) gmap.fitBounds(bounds, 48); else { gmap.setCenter(HOME); gmap.setZoom(9); }
         }
-        window.__briefingUpdatePins = function () { if (gmap) placePins(true); };
+        // Skip while the map has no size (a hidden tab or a map still laying out): fitting then zooms out to the whole world.
+        window.__briefingUpdatePins = function () { if (gmap && gmap.getDiv().clientHeight > 0) placePins(true); };
         function draw() {
         var css = getComputedStyle(document.documentElement);
         var col = colFor(css);
