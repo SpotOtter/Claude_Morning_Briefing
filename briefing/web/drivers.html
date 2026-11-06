@@ -31,14 +31,16 @@ button:disabled{opacity:.6}
 .who b{display:block}
 .tag{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .temp{font:700 30px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.08em;text-align:center;padding:14px;border:2px dashed var(--mark);border-radius:12px;margin:12px 0;user-select:all}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top{position:relative;min-height:56px;padding-right:56px;display:flex;align-items:center}
+.top .menu-btn{top:6px;right:0}
+.top .menu-panel{top:56px;right:0}
 a{color:inherit}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <main>
-  <div class="top"><h1>Driver Sign-In</h1><a href="/" class="muted">Briefing</a></div>
+  <div class="top" data-menu-host><h1>Driver Sign-In</h1></div>
 
   <section id="loading" class="muted">Loading…</section>
 
@@ -106,6 +108,7 @@ a{color:inherit}
     </div>
   </section>
 </main>
+<script src="/menu.js"></script>
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };

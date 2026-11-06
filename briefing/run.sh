@@ -13,6 +13,7 @@ mkdir -p "$SITE"
 # Always take the page from the add-on image; keep any data already fetched.
 cp /opt/briefing/web/index.html "$SITE/index.html"
 cp /opt/briefing/web/drivers.html "$SITE/drivers.html"
+cp /opt/briefing/web/menu.js "$SITE/menu.js"
 [ -f "$SITE/data.json" ] || cp /opt/briefing/web/data.json "$SITE/data.json"
 
 # Settings the page can read. The Google Maps key is restricted to your domain in Google Cloud.
