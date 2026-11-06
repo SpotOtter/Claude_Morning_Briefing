@@ -1,5 +1,5 @@
 name: "Mossy Head Briefing"
-version: "0.1.5B"
+version: "0.2.0B"
 slug: "briefing"
 description: "Serves the daily briefing page and refreshes its weather, road and news data every day."
 url: "https://github.com/SpotOtter/Claude_Morning_Briefing"
@@ -17,6 +17,10 @@ ports_description:
 options:
   maps_key: ""
   timezone: "America/Chicago"
+  admin_name: "Chris Bryan"
+  admin_temp_password: ""
 schema:
   maps_key: "password?"
   timezone: "str"
+  admin_name: "str"
+  admin_temp_password: "password?"

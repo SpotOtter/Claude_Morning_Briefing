@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Driver Sign-In</title>
+<style>
+:root{--bg:#f4f1ea;--surface:#fff;--ink:#1d1f1c;--muted:#666a63;--line:#ddd8cc;--mark:#e8a317;--markink:#1d1f1c;--good:#2e7d32;--bad:#b3261e;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141513;--surface:#1f211e;--ink:#eeeae0;--muted:#9a9d94;--line:#34372f;--good:#6fbf73;--bad:#ff8a80;}}
+:root[data-theme="dark"]{--bg:#141513;--surface:#1f211e;--ink:#eeeae0;--muted:#9a9d94;--line:#34372f;--good:#6fbf73;--bad:#ff8a80;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:520px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:26px;margin:8px 0 4px}
+h2{font-size:20px;margin:0 0 10px}
+p{margin:0 0 12px}
+.muted{color:var(--muted);font-size:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+label{display:block;font-weight:600;margin:12px 0 6px}
+input,select{width:100%;font:inherit;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+button{font:inherit;font-weight:700;padding:14px 18px;border:0;border-radius:10px;background:var(--mark);color:var(--markink);cursor:pointer;min-height:48px}
+button.full{width:100%;margin-top:16px}
+button.quiet{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600}
+button.small{padding:8px 12px;min-height:40px;font-size:15px}
+button.danger{color:var(--bad)}
+button:disabled{opacity:.6}
+.err{color:var(--bad);margin:10px 0 0;min-height:1em}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.who b{display:block}
+.tag{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.temp{font:700 30px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.08em;text-align:center;padding:14px;border:2px dashed var(--mark);border-radius:12px;margin:12px 0;user-select:all}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+a{color:inherit}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><h1>Driver Sign-In</h1><a href="/" class="muted">Briefing</a></div>
+
+  <section id="loading" class="muted">Loading…</section>
+
+  <section id="signin" class="card" hidden>
+    <form id="fSignin" autocomplete="on">
+      <label for="u">Username</label>
+      <input id="u" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Example: John-S" required>
+      <label for="p">Password</label>
+      <input id="p" name="password" type="password" autocomplete="current-password" required>
+      <p class="err" id="eSignin" role="alert"></p>
+      <button class="full" type="submit">Sign in</button>
+    </form>
+    <p class="muted" style="margin-top:14px">No account yet, or forgot your password? Ask your lead.</p>
+  </section>
+
+  <section id="change" class="card" hidden>
+    <h2 id="changeTitle">Choose your own password</h2>
+    <p class="muted">Pick something you will remember. At least 6 characters.</p>
+    <form id="fChange">
+      <input type="text" name="username" id="cu" autocomplete="username" hidden>
+      <label for="cur" id="lblCur">Temporary password</label>
+      <input id="cur" type="password" autocomplete="current-password" required>
+      <label for="n1">New password</label>
+      <input id="n1" type="password" autocomplete="new-password" minlength="6" required>
+      <label for="n2">New password again</label>
+      <input id="n2" type="password" autocomplete="new-password" minlength="6" required>
+      <p class="err" id="eChange" role="alert"></p>
+      <button class="full" type="submit">Save password</button>
+    </form>
+  </section>
+
+  <section id="home" hidden>
+    <div class="card">
+      <h2 id="hello"></h2>
+      <p class="muted" id="roleLine"></p>
+      <p id="soon">Dispatches will show up here.</p>
+      <button class="quiet small" id="bOut" type="button">Sign out</button>
+      <button class="quiet small" id="bPw" type="button">Change my password</button>
+    </div>
+
+    <div class="card" id="staff" hidden>
+      <h2>Add a driver</h2>
+      <form id="fAdd">
+        <label for="fn">First name</label>
+        <input id="fn" autocomplete="off" required>
+        <label for="ln">Last name</label>
+        <input id="ln" autocomplete="off" required>
+        <div id="roleBox" hidden>
+          <label for="rl">Role</label>
+          <select id="rl"><option value="driver">Driver</option><option value="lead">Lead</option></select>
+        </div>
+        <p class="err" id="eAdd" role="alert"></p>
+        <button class="full" type="submit">Create account</button>
+      </form>
+      <div id="made" hidden>
+        <p style="margin-top:16px"><b id="madeName"></b> can sign in with this temporary password. It is shown only once.</p>
+        <div class="temp" id="madePw"></div>
+        <button type="button" class="full" id="bCopy">Copy password</button>
+      </div>
+    </div>
+
+    <div class="card" id="people" hidden>
+      <h2>People</h2>
+      <div id="list"></div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var me = null, voluntary = false;
+  try { var t = localStorage.getItem('briefing-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch(e){}
+
+  function api(path, body){
+    var o = body === undefined ? {method:'GET'} :
+      {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)};
+    o.credentials = 'same-origin';
+    return fetch('/api/' + path, o).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){ d.status = r.status; return d; });
+    }).catch(function(){ return {status:0, error:'No connection. Check your signal and try again.'}; });
+  }
+  function show(id){
+    ['loading','signin','change','home'].forEach(function(k){ $(k).hidden = (k !== id); });
+  }
+  function setBusy(form, on){ var b = form.querySelector('button[type=submit]'); if (b) b.disabled = on; }
+
+  function render(){
+    if (!me){ show('signin'); return; }
+    if (me.must_change || voluntary){
+      $('cu').value = me.username;
+      $('changeTitle').textContent = voluntary ? 'Change your password' : 'Welcome, ' + me.name.split(' ')[0] + '. Choose your own password';
+      $('lblCur').textContent = voluntary ? 'Current password' : 'Temporary password';
+      $('cur').value = ''; $('n1').value = ''; $('n2').value = '';
+      show('change'); return;
+    }
+    show('home');
+    $('hello').textContent = 'Hi, ' + me.name.split(' ')[0];
+    $('roleLine').textContent = 'Signed in as ' + me.username + ' (' + me.role + ')';
+    var staff = me.role === 'admin' || me.role === 'lead';
+    $('staff').hidden = !staff; $('people').hidden = !staff;
+    $('roleBox').hidden = me.role !== 'admin';
+    if (staff) loadPeople();
+  }
+
+  function loadPeople(){
+    api('users').then(function(d){
+      if (d.status !== 200){ return; }
+      var box = $('list'); box.innerHTML = '';
+      d.users.forEach(function(u){
+        var row = document.createElement('div'); row.className = 'row';
+        var who = document.createElement('div'); who.className = 'who';
+        var b = document.createElement('b'); b.textContent = u.name;
+        var s = document.createElement('span'); s.className = 'muted';
+        s.textContent = u.username + (u.must_change ? ' · has not signed in yet' : '');
+        who.appendChild(b); who.appendChild(s);
+        var tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = u.role;
+        row.appendChild(who);
+        var side = document.createElement('div'); side.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+        side.appendChild(tag);
+        var mine = u.id === me.id;
+        var canManage = !mine && u.role !== 'admin' && (me.role === 'admin' || u.role === 'driver');
+        if (canManage){
+          var r = document.createElement('button'); r.className = 'quiet small'; r.textContent = 'New password';
+          r.onclick = function(){
+            if (!confirm('Give ' + u.name + ' a new temporary password? They will be signed out.')) return;
+            api('users/' + u.id + '/reset', {}).then(function(x){
+              if (x.status === 200) showMade(u.name, x.temp_password); else alert(x.error || 'Could not do that.');
+            });
+          };
+          var d2 = document.createElement('button'); d2.className = 'quiet small danger'; d2.textContent = 'Remove';
+          d2.onclick = function(){
+            if (!confirm('Remove ' + u.name + '? They will no longer be able to sign in.')) return;
+            api('users/' + u.id + '/remove', {}).then(function(x){
+              if (x.status === 200) loadPeople(); else alert(x.error || 'Could not do that.');
+            });
+          };
+          side.appendChild(r); side.appendChild(d2);
+        }
+        row.appendChild(side);
+        box.appendChild(row);
+      });
+    });
+  }
+  function showMade(name, pw){
+    $('madeName').textContent = name; $('madePw').textContent = pw; $('made').hidden = false;
+    $('bCopy').textContent = 'Copy password';
+    $('made').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  $('fSignin').onsubmit = function(e){
+    e.preventDefault(); $('eSignin').textContent = ''; setBusy(this, true);
+    var f = this;
+    api('login', {username:$('u').value.trim(), password:$('p').value}).then(function(d){
+      setBusy(f, false);
+      if (d.status === 200){ me = d.user; $('p').value = ''; render(); }
+      else $('eSignin').textContent = d.error || 'Could not sign in.';
+    });
+  };
+  $('fChange').onsubmit = function(e){
+    e.preventDefault(); var er = $('eChange'); er.textContent = '';
+    if ($('n1').value !== $('n2').value){ er.textContent = 'The two new passwords do not match.'; return; }
+    var f = this; setBusy(f, true);
+    api('change-password', {current:$('cur').value, new:$('n1').value}).then(function(d){
+      setBusy(f, false);
+      if (d.status === 200){ me = d.user; voluntary = false; render(); }
+      else er.textContent = d.error || 'Could not save the password.';
+    });
+  };
+  $('fAdd').onsubmit = function(e){
+    e.preventDefault(); $('eAdd').textContent = ''; $('made').hidden = true;
+    var f = this; setBusy(f, true);
+    api('users', {first:$('fn').value, last:$('ln').value, role: me.role === 'admin' ? $('rl').value : 'driver'}).then(function(d){
+      setBusy(f, false);
+      if (d.status === 200){
+        showMade(d.user.name + ' — username ' + d.user.username, d.temp_password);
+        $('fn').value = ''; $('ln').value = ''; loadPeople();
+      } else $('eAdd').textContent = d.error || 'Could not create the account.';
+    });
+  };
+  $('bCopy').onclick = function(){
+    var t = $('madePw').textContent, b = this;
+    function ok(){ b.textContent = 'Copied'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, function(){});
+    else { var r = document.createRange(); r.selectNodeContents($('madePw')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); try { document.execCommand('copy'); ok(); } catch(x){} }
+  };
+  $('bOut').onclick = function(){ api('logout', {}).then(function(){ me = null; voluntary = false; $('made').hidden = true; render(); }); };
+  $('bPw').onclick = function(){
+    voluntary = true; render();
+  };
+
+  api('me').then(function(d){ me = d.status === 200 ? d.user : null; render(); });
+})();
+</script>
+</body>
+</html>
