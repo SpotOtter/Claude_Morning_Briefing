@@ -504,7 +504,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   }
   // Google map with live traffic. Replaces the schematic map once it loads;
   // if the key is missing, wrong, or blocked, the schematic map stays.
-  function loadGoogleMap(key, box, items) {
+  function loadGoogleMap(key, box, getItems) {
     var HOME = { lat: 30.77, lng: -86.31 };
     window.gm_authFailure = function () { /* keep the schematic map */ };
     window.__briefingMapReady = function () {
@@ -512,9 +512,27 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
       Promise.all([g.importLibrary('maps'), g.importLibrary('marker')]).then(function (libs) {
         // The map's color scheme can only be set when it is created, so a theme
         // switch redraws it (pin colors follow the page theme too).
+        var gmap = null, pins = [];
+        function colFor(css) { return function (v, d) { return (css.getPropertyValue(v) || '').trim() || d; }; }
+        // Place the numbered incident pins. A refresh swaps the pins on the same map, so it is not a new map load.
+        function placePins(fit) {
+          var items = getItems() || [], col = colFor(getComputedStyle(document.documentElement));
+          var M = libs[1], bounds = new g.LatLngBounds(HOME);
+          pins.forEach(function (m) { m.map = null; }); pins = [];
+          items.forEach(function (c, i) {
+            if (typeof c.lat !== 'number' || typeof c.lon !== 'number') return;
+            var crash = c.type === 'crash', pos = { lat: c.lat, lng: c.lon };
+            bounds.extend(pos);
+            pins.push(new M.AdvancedMarkerElement({ map: gmap, position: pos, title: (crash ? 'Crash: ' : 'Closure: ') + (c.route || '') + ' ' + (c.where || ''),
+              content: new M.PinElement({ glyphText: String(i + 1), glyphColor: '#fff',
+                background: crash ? col('--warn', '#C2410C') : col('--bad', '#B91C1C'), borderColor: '#fff' }) }));
+          });
+          if (items.length) gmap.fitBounds(bounds, 48); else { gmap.setCenter(HOME); gmap.setZoom(9); }
+        }
+        window.__briefingUpdatePins = function () { if (gmap) placePins(true); };
         function draw() {
         var css = getComputedStyle(document.documentElement);
-        function col(v, d) { return (css.getPropertyValue(v) || '').trim() || d; }
+        var col = colFor(css);
         var dark = !!(window.briefingTheme && window.briefingTheme.isDark());
         var holder = el('div', { 'class': 'gmap', role: 'region', 'aria-label': 'Google map with live traffic and marked closures and crashes' });
         var mapOpts = {
@@ -527,23 +545,13 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
         var M = libs[1];
         new M.AdvancedMarkerElement({ map: map, position: HOME, title: 'Mossy Head',
           content: new M.PinElement({ background: col('--mark', '#F2B705'), borderColor: col('--road', '#23272D'), glyphColor: col('--road', '#23272D') }) });
-        var bounds = new g.LatLngBounds(HOME);
-        items.forEach(function (c, i) {
-          if (typeof c.lat !== 'number' || typeof c.lon !== 'number') return;
-          var crash = c.type === 'crash';
-          var pos = { lat: c.lat, lng: c.lon };
-          bounds.extend(pos);
-          new M.AdvancedMarkerElement({ map: map, position: pos, title: (crash ? 'Crash: ' : 'Closure: ') + (c.route || '') + ' ' + (c.where || ''),
-            content: new M.PinElement({ glyphText: String(i + 1), glyphColor: '#fff',
-              background: crash ? col('--warn', '#C2410C') : col('--bad', '#B91C1C'), borderColor: '#fff' }) });
-        });
-        if (items.length) map.fitBounds(bounds, 48);
+        gmap = map; pins = [];
+        placePins(true);
         box.className = 'mapbox gmapbox';
         box.removeAttribute('tabindex');
         box.textContent = '';
         box.appendChild(holder);
-        var upd = document.querySelector('.mapupdated');
-        if (upd && upd.textContent.indexOf('Traffic colors') < 0) upd.textContent += ' Traffic colors on the map are live.';
+        if (window.__briefingSetUpd) window.__briefingSetUpd();
         }
         draw();
         window.__briefingRedrawMap = draw;
@@ -738,34 +746,50 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   var mapbox = el('div', { 'class': 'mapbox', tabindex: '0' }, [buildMap(r.items)]);
   rsec.appendChild(mapbox);
   var mapsKey = (window.BRIEFING_CONFIG && window.BRIEFING_CONFIG.mapsKey) || '';
-  if (/^[A-Za-z0-9_-]{20,}$/.test(mapsKey)) loadGoogleMap(mapsKey, mapbox, r.items || []);
+  if (/^[A-Za-z0-9_-]{20,}$/.test(mapsKey)) loadGoogleMap(mapsKey, mapbox, function () { return (data.roads && data.roads.items) || []; });
   rsec.appendChild(el('div', { 'class': 'maplegend' }, [
     el('span', null, [el('i', { 'class': 'lg-dot closure' }), document.createTextNode('Closure')]),
     el('span', null, [el('i', { 'class': 'lg-dot crash' }), document.createTextNode('Major crash')])
   ]));
-  rsec.appendChild(el('p', { 'class': 'mapupdated', text: (r.unavailable ? 'Closures and crashes could not be checked right now.' : 'Closures and crashes last checked ' + (r.updated || data.updated || 'at the morning update') + '.' + (r.stale ? ' FL511 could not be reached just now, so this may be out of date.' : '')) }));
-  if (r.items && r.items.length) {
-    var ul = el('ul', { 'class': 'roads' });
-    r.items.forEach(function (c, i) {
-      var kind = c.type === 'crash' ? 'crash' : 'closure';
-      var info = el('div', null, [
-        el('h3', null, [
-          el('span', { 'class': 'num ' + kind, text: String(i + 1) }),
-          el('span', { 'class': 'when ' + kind, text: (kind === 'crash' ? 'Crash · ' : 'Closed · ') + c.when }),
-          document.createTextNode(c.where)
-        ]),
-        el('p', { text: c.detail + (c.detour ? ' Detour: ' + c.detour : '') })
-      ]);
-      var src = link('Source', c.url, 'btn srclink');
-      if (src) info.appendChild(src);
-      ul.appendChild(el('li', { 'class': 'road' }, [el('div', { 'class': 'shield', text: c.route }), info]));
-    });
-    rsec.appendChild(ul);
-  } else {
-    rsec.appendChild(el('div', { 'class': 'empty' }, [el('div', null, [
-      el('strong', { text: r.emptyText }), el('div', { text: r.emptyNote })
-    ])]));
+  var updEl = el('p', { 'class': 'mapupdated' });
+  rsec.appendChild(updEl);
+  window.__briefingSetUpd = function () {
+    var rr = data.roads || {};
+    updEl.textContent = rr.unavailable ? 'Closures and crashes could not be checked right now.'
+      : 'Closures and crashes last checked ' + (rr.updated || data.updated || 'at the morning update') + '.' +
+        (rr.stale ? ' FL511 could not be reached just now, so this may be out of date.' : '') +
+        (mapbox.classList.contains('gmapbox') ? ' Traffic colors on the map are live.' : '');
+  };
+  window.__briefingSetUpd();
+  var listBox = el('div');
+  rsec.appendChild(listBox);
+  function renderRoadList() {
+    var rr = data.roads || {};
+    listBox.textContent = '';
+    if (rr.items && rr.items.length) {
+      var ul = el('ul', { 'class': 'roads' });
+      rr.items.forEach(function (c, i) {
+        var kind = c.type === 'crash' ? 'crash' : 'closure';
+        var info = el('div', null, [
+          el('h3', null, [
+            el('span', { 'class': 'num ' + kind, text: String(i + 1) }),
+            el('span', { 'class': 'when ' + kind, text: (kind === 'crash' ? 'Crash · ' : 'Closed · ') + c.when }),
+            document.createTextNode(c.where)
+          ]),
+          el('p', { text: c.detail + (c.detour ? ' Detour: ' + c.detour : '') })
+        ]);
+        var src = link('Source', c.url, 'btn srclink');
+        if (src) info.appendChild(src);
+        ul.appendChild(el('li', { 'class': 'road' }, [el('div', { 'class': 'shield', text: c.route }), info]));
+      });
+      listBox.appendChild(ul);
+    } else {
+      listBox.appendChild(el('div', { 'class': 'empty' }, [el('div', null, [
+        el('strong', { text: rr.emptyText }), el('div', { text: rr.emptyNote })
+      ])]));
+    }
   }
+  renderRoadList();
   var rl = el('div', { 'class': 'links' });
   (r.links || []).forEach(function (l) { var a = link(l.label, l.url); if (a) rl.appendChild(a); });
   rsec.appendChild(rl);
@@ -814,17 +838,22 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     ['Stay clear of the tailgate', 'When the bed goes up, stay out of the dump zone. Wet or sticky loads can come out all at once.']
   ];
   function dayIndex() { var s = String(data.dayLabel || ''), h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
-  var stips = safetyTips(), sbasis, ssec = el('section', { 'class': 'card', 'aria-label': 'Safety' });
-  if (stips.length) sbasis = el('span', { 'class': 'basis', text: (data.weather && data.weather.rollingWindow) ? 'Based on the next 12 hours' : 'Based on today' });
-  else {
-    var pick = BANK[dayIndex() % BANK.length];
-    stips = [{ h: pick[0], t: pick[1] }];
-    sbasis = el('span', { 'class': 'basis rand', text: 'Safety tip of the day' });
+  var ssec = el('section', { 'class': 'card', 'aria-label': 'Safety' });
+  function renderSafety() {
+    var stips = safetyTips(), sbasis;
+    ssec.textContent = '';
+    if (stips.length) sbasis = el('span', { 'class': 'basis', text: (data.weather && data.weather.rollingWindow) ? 'Based on the next 12 hours' : 'Based on today' });
+    else {
+      var pick = BANK[dayIndex() % BANK.length];
+      stips = [{ h: pick[0], t: pick[1] }];
+      sbasis = el('span', { 'class': 'basis rand', text: 'Safety tip of the day' });
+    }
+    ssec.appendChild(el('h2', null, [el('span', { text: 'Safety' }), sbasis]));
+    var slist = el('ul', { 'class': 'tips' });
+    stips.forEach(function (x) { slist.appendChild(el('li', null, [el('div', { 'class': 'th', text: x.h }), el('p', { text: x.t })])); });
+    ssec.appendChild(slist);
   }
-  ssec.appendChild(el('h2', null, [el('span', { text: 'Safety' }), sbasis]));
-  var slist = el('ul', { 'class': 'tips' });
-  stips.forEach(function (x) { slist.appendChild(el('li', null, [el('div', { 'class': 'th', text: x.h }), el('p', { text: x.t })])); });
-  ssec.appendChild(slist);
+  renderSafety();
   top.appendChild(ssec);
 
   // Headlines
@@ -839,6 +868,29 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
   });
   nsec.appendChild(nl);
   top.appendChild(nsec);
+
+  // Keep an open page current: every 5 minutes, and when the tab comes back to the front, re-read data.json
+  // and update only the closures and crashes (list, pins, note) and the safety tip that depends on them.
+  var lastRoads = JSON.stringify(data.roads || {}), refreshing = false;
+  function refreshRoads() {
+    if (refreshing || document.hidden) return;
+    refreshing = true;
+    fetch('data.json', { cache: 'no-store' }).then(function (res) { if (!res.ok) throw 0; return res.json(); }).then(function (nd) {
+      if (!nd || !nd.roads) return;
+      var key = JSON.stringify(nd.roads);
+      if (key === lastRoads) return;
+      var itemsChanged = JSON.stringify(nd.roads.items) !== JSON.stringify((data.roads || {}).items);
+      lastRoads = key; data.roads = nd.roads;
+      window.__briefingSetUpd();
+      if (itemsChanged) {
+        renderRoadList(); renderSafety();
+        if (window.__briefingUpdatePins) window.__briefingUpdatePins();
+        else if (!mapbox.classList.contains('gmapbox')) { mapbox.textContent = ''; mapbox.appendChild(buildMap(data.roads.items || [])); }
+      }
+    }).catch(function () { /* keep what is showing */ }).then(function () { refreshing = false; });
+  }
+  setInterval(refreshRoads, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', refreshRoads);
 
   var foot = el('footer', { text: data.sources });
   // On phones, offer a switch between the mobile and the full desktop layout.
