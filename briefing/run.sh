@@ -34,10 +34,12 @@ server {
 EOF
 
 # Every day, local time as set above: data at 4:30 AM and then on the hour, around
-# the clock, so the next-12-hours weather and the incident pins stay current.
+# the clock for the next-12-hours weather. Closures and crashes refresh on their own every
+# 10 minutes, at times that never overlap the hourly data build.
 cat > /etc/crontabs/root <<'EOF'
 30 4 * * * /build.sh data
 0 * * * * /build.sh data
+5,15,25,35,45,55 * * * * /build.sh roads
 EOF
 
 bashio::log.info "Timezone ${TZ}. Fetching first data in the background."

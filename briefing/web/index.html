@@ -743,7 +743,7 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     el('span', null, [el('i', { 'class': 'lg-dot closure' }), document.createTextNode('Closure')]),
     el('span', null, [el('i', { 'class': 'lg-dot crash' }), document.createTextNode('Major crash')])
   ]));
-  rsec.appendChild(el('p', { 'class': 'mapupdated', text: 'Closures and crashes last updated ' + (data.updated || 'at the morning update') + '.' }));
+  rsec.appendChild(el('p', { 'class': 'mapupdated', text: (r.unavailable ? 'Closures and crashes could not be checked right now.' : 'Closures and crashes last checked ' + (r.updated || data.updated || 'at the morning update') + '.' + (r.stale ? ' FL511 could not be reached just now, so this may be out of date.' : '')) }));
   if (r.items && r.items.length) {
     var ul = el('ul', { 'class': 'roads' });
     r.items.forEach(function (c, i) {
