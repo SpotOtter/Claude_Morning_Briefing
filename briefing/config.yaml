@@ -1,5 +1,5 @@
 name: "Mossy Head Briefing"
-version: "0.2.0B"
+version: "0.2.1B"
 slug: "briefing"
 description: "Serves the daily briefing page and refreshes its weather, road and news data every day."
 url: "https://github.com/SpotOtter/Claude_Morning_Briefing"

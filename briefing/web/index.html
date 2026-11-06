@@ -286,9 +286,23 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
 @media (prefers-reduced-motion: no-preference) {
   .card { transition: border-color .2s; }
 }
+.menu-btn { position: absolute; top: 12px; right: max(12px, env(safe-area-inset-right, 0px)); z-index: 5; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--road-muted); background: transparent; color: var(--road-ink); cursor: pointer; }
+.menu-btn:hover { border-color: var(--road-ink); }
+.menu-panel { position: absolute; top: 62px; right: max(12px, env(safe-area-inset-right, 0px)); z-index: 5; min-width: 200px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.menu-panel[hidden] { display: none; }
+.menu-panel a { display: block; padding: 13px 14px; border-radius: 8px; text-decoration: none; font: 600 17px/1.2 var(--font-body); }
+.menu-panel a:hover, .menu-panel a[aria-current] { background: var(--bg); }
+@media (max-width: 560px) { .mast .place { padding-right: 56px; } }
 </style>
 
 <header class="mast">
+  <button type="button" class="menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="menu-panel">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <nav class="menu-panel" id="menu-panel" aria-label="Pages" hidden>
+    <a href="/" aria-current="page">Briefing</a>
+    <a href="/drivers">Driver sign-in</a>
+  </nav>
   <div class="mast-in">
     <div>
       <p class="place" id="place"></p>
@@ -304,6 +318,16 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     </div>
   </div>
 </header>
+
+<script>
+(function () {
+  var b = document.getElementById('menu-btn'), p = document.getElementById('menu-panel');
+  function set(open) { p.hidden = !open; b.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+  b.addEventListener('click', function (e) { e.stopPropagation(); set(p.hidden); });
+  document.addEventListener('click', function (e) { if (!p.hidden && !p.contains(e.target)) set(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+})();
+</script>
 
 <main class="wrap" id="app" aria-live="polite"></main>
 
@@ -904,7 +928,6 @@ footer { color: var(--muted); font-size: 13px; line-height: 1.5; }
     });
     foot.appendChild(el('div', { 'class': 'viewrow' }, [vb]));
   }
-  foot.appendChild(el('div', { 'class': 'viewrow' }, [el('a', { href: '/drivers', text: 'Driver sign-in' })]));
   top.appendChild(foot);
   }
 })();
